@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import dev.akif.exchange.common.Controller;
+import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.rate.RateService;
-import dev.akif.exchange.rate.dto.RateRequest;
 import dev.akif.exchange.rate.dto.RateResponse;
 import e.java.EOr;
 
@@ -26,7 +26,7 @@ public class RateController extends Controller {
     @GetMapping
     public ResponseEntity<RateResponse> rates(@RequestParam("source") String source,
                                               @RequestParam("target") String target) {
-        EOr<RateResponse> response = RateRequest.of(source, target).flatMap(rateService::rate);
+        EOr<RateResponse> response = CurrencyPair.of(source, target).flatMap(rateService::rate);
 
         return respond(response);
     }

@@ -14,12 +14,16 @@ public interface Errors {
         E invalidCurrency = badRequest.message("Currency is invalid!");
     }
 
+    interface Conversion {
+        E cannotSaveConversion = internalServerError.name("database").message("Cannot save conversion");
+    }
+
     interface FixerIO {
-        E ratesRequestFailed = serviceUnavailable.message("Cannot get rates from fixer.io!");
-        E parsingRatesFailed = serviceUnavailable.message("Cannot parse rates from fixer.io!");
+        E ratesRequestFailed = serviceUnavailable.message("Cannot get rates from fixer.io");
+        E parsingRatesFailed = serviceUnavailable.message("Cannot parse rates from fixer.io");
     }
 
     interface Rate {
-        E cannotReadRate = internalServerError.name("database").message("Cannot read rate!");
+        E cannotReadRate = internalServerError.name("database").message("Cannot read rate");
     }
 }

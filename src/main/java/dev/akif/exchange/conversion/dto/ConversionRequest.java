@@ -1,44 +1,36 @@
-package dev.akif.exchange.rate.dto;
+package dev.akif.exchange.conversion.dto;
 
 import java.util.StringJoiner;
 
-import dev.akif.exchange.common.CurrencyPair;
-
-public class RateResponse {
+public class ConversionRequest {
     public final String source;
     public final String target;
-    public final double rate;
+    public final double amount;
 
-    public RateResponse(String source, String target, double rate) {
+    public ConversionRequest(String source, String target, double amount) {
         this.source = source;
         this.target = target;
-        this.rate   = rate;
-    }
-
-    public RateResponse(CurrencyPair pair, double rate) {
-        this.source = pair.getSource();
-        this.target = pair.getTarget();
-        this.rate   = rate;
+        this.amount = amount;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof RateResponse)) return false;
+        if (!(o instanceof ConversionRequest)) return false;
 
-        RateResponse that = (RateResponse) o;
+        ConversionRequest that = (ConversionRequest) o;
 
         if (!this.source.equals(that.source)) return false;
         if (!this.target.equals(that.target)) return false;
 
-        return this.rate == that.rate;
+        return this.amount == amount;
     }
 
     @Override
     public int hashCode() {
         int result = source.hashCode();
         result = 31 * result + target.hashCode();
-        result = 31 * result + Double.hashCode(rate);
+        result = 31 * result + Double.hashCode(amount);
         return result;
     }
 
@@ -47,7 +39,7 @@ public class RateResponse {
         return new StringJoiner(",", "{", "}")
             .add("\"source\":\"" + source + "\"")
             .add("\"target\":\"" + target + "\"")
-            .add("\"rate\":" + rate)
+            .add("\"amount\":" + amount)
             .toString();
     }
 }

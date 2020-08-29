@@ -8,16 +8,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.common.Errors;
 import dev.akif.exchange.provider.RateProvider;
 import dev.akif.exchange.provider.TimeProvider;
 import dev.akif.exchange.provider.dto.RateProviderResponse;
 import dev.akif.exchange.rate.RateRepository;
 import dev.akif.exchange.rate.RateService;
-import dev.akif.exchange.rate.dto.RateRequest;
 import dev.akif.exchange.rate.dto.RateResponse;
 import dev.akif.exchange.rate.model.Rate;
-import dev.akif.exchange.rate.model.RateId;
 import e.java.E;
 import e.java.EOr;
 
@@ -42,17 +41,17 @@ public class RateServiceImpl implements RateService {
     }
 
     @Override
-    public EOr<RateResponse> rate(RateRequest request) {
-        logger.info("Getting rate for {}", request);
+    public EOr<RateResponse> rate(CurrencyPair pair) {
+        logger.info("Getting rate for {}", pair);
 
-        EOr<RateResponse> response = request.source.equals(request.target) ? EOr.from(new RateResponse(request, 1.0)) :
-            rateOfBaseTo(request.target).flatMap(targetRate ->
-                rateOfBaseTo(request.source).map(sourceRate ->
-                    new RateResponse(request, targetRate.rate / sourceRate.rate)
+        EOr<RateResponse> response = pair.getSource().equals(pair.getTarget()) ? EOr.from(new RateResponse(pair, 1.0)) :
+            rateOfBaseTo(pair.getTarget()).flatMap(targetRate ->
+                rateOfBaseTo(pair.getSource()).map(sourceRate ->
+                    new RateResponse(pair, targetRate.rate / sourceRate.rate)
                 )
             );
 
-        response.forEach(r -> logger.info("Rate for {} is {}", request, r.rate));
+        response.forEach(r -> logger.info("Rate for {} is {}", pair, r.rate));
 
         return response;
     }
@@ -64,9 +63,9 @@ public class RateServiceImpl implements RateService {
             return EOr.from(new RateResponse(base, currency, 1.0));
         }
 
-        RateId id = new RateId(base, currency);
+        CurrencyPair pair = new CurrencyPair(base, currency);
 
-        EOr<Double> rate = getRateFromDB(id).flatMap(maybeRate ->
+        EOr<Double> rate = getRateFromDB(pair).flatMap(maybeRate ->
             maybeRate.map(r ->
                 EOr.from(r.getRate())
             ).orElseGet(() ->
@@ -76,12 +75,12 @@ public class RateServiceImpl implements RateService {
             )
         );
 
-        rate.forEach(r -> logger.debug("Rate for {} is {}", id, r));
+        rate.forEach(r -> logger.debug("Rate for {} is {}", pair, r));
 
         return rate.map(r -> new RateResponse(base, currency, r));
     }
 
-    private EOr<Optional<Rate>> getRateFromDB(RateId id) {
+    private EOr<Optional<Rate>> getRateFromDB(CurrencyPair id) {
         logger.debug("Getting rate for {} from DB", id);
 
         return EOr.catching(

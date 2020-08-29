@@ -1,22 +1,24 @@
-package dev.akif.exchange.rate.dto;
+package dev.akif.exchange.common;
 
+import java.io.Serializable;
 import java.util.Currency;
 import java.util.StringJoiner;
 
-import dev.akif.exchange.common.Errors;
 import e.java.E;
 import e.java.EOr;
 
-public class RateRequest {
-    public final String source;
-    public final String target;
+public class CurrencyPair implements Serializable {
+    private String source;
+    private String target;
 
-    private RateRequest(String source, String target) {
+    public CurrencyPair() {}
+
+    public CurrencyPair(String source, String target) {
         this.source = source;
         this.target = target;
     }
 
-    public static EOr<RateRequest> of(String source, String target) {
+    public static EOr<CurrencyPair> of(String source, String target) {
         return EOr.catching(
             () -> Currency.getInstance(source),
             t  -> Errors.Common.invalidCurrency.data("source", source).cause(E.fromThrowable(t))
@@ -26,16 +28,32 @@ public class RateRequest {
                 t  -> Errors.Common.invalidCurrency.data("target", target)
             )
         ).map(t ->
-            new RateRequest(source, target)
+            new CurrencyPair(source, target)
         );
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public String getTarget() {
+        return target;
+    }
+
+    public void setTarget(String target) {
+        this.target = target;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof RateRequest)) return false;
+        if (!(o instanceof CurrencyPair)) return false;
 
-        RateRequest that = (RateRequest) o;
+        CurrencyPair that = (CurrencyPair) o;
 
         if (!this.source.equals(that.source)) return false;
 

@@ -8,9 +8,11 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.Table;
 
+import dev.akif.exchange.common.CurrencyPair;
+
 @Entity
 @Table(name = "rates")
-@IdClass(RateId.class)
+@IdClass(CurrencyPair.class)
 public class Rate {
     @Id
     @Column(name = "source")
@@ -76,21 +78,22 @@ public class Rate {
 
         if (!this.source.equals(that.source)) return false;
         if (!this.target.equals(that.target)) return false;
-        if (Double.compare(this.rate, that.rate) != 0) return false;
+        if (this.rate != that.rate) return false;
 
-        return updatedAt == that.updatedAt;
+        return this.updatedAt == that.updatedAt;
     }
 
-    @Override public int hashCode() {
-        int result;
-        result = source.hashCode();
+    @Override
+    public int hashCode() {
+        int result = source.hashCode();
         result = 31 * result + target.hashCode();
         result = 31 * result + Double.hashCode(rate);
         result = 31 * result + Long.hashCode(updatedAt);
         return result;
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return new StringJoiner(",", "{", "}")
             .add("\"source\":\"" + source + "\"")
             .add("\"target\":\"" + target + "\"")
