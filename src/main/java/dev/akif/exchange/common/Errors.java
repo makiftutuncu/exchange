@@ -20,7 +20,6 @@ public interface Errors {
     }
 
     interface Rate {
-        E notFound             = Errors.notFound.message("Rate for requested currency is not found!");
-        E currencyNotSupported = badRequest.message("Currency is not supported!");
+        E cannotReadRate = internalServerError.name("database").message("Cannot read rate!");
     }
 }

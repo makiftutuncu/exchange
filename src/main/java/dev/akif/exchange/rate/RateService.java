@@ -5,5 +5,5 @@ import dev.akif.exchange.rate.dto.RateResponse;
 import e.java.EOr;
 
 public interface RateService {
-    EOr<RateResponse> rates(RateRequest request);
+    EOr<RateResponse> rate(RateRequest request);
 }

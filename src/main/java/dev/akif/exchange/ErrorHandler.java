@@ -19,23 +19,20 @@ public class ErrorHandler {
 
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<String> handle(NoHandlerFoundException exception) {
-        logger.info("No handler found!");
+        logger.debug("No handler found");
 
         return handle(Errors.notFound.data("method", exception.getHttpMethod()).data("url", exception.getRequestURL()));
     }
 
-    @ExceptionHandler(EException.class)
-    public ResponseEntity<String> handle(EException exception) {
-        logger.error("Caught an handled error!", exception);
-
-        return handle(exception.e);
-    }
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handle(Exception exception) {
-        logger.error("Caught an unhandled exception!", exception);
+        logger.error("Caught an exception", exception);
 
-        return handle(Errors.internalServerError.message("An unknown error occurred!").cause(E.fromThrowable(exception)));
+        E e = exception instanceof EException ?
+            ((EException) exception).e :
+            Errors.internalServerError.message("An unknown error occurred").cause(E.fromThrowable(exception));
+
+        return handle(e);
     }
 
     private ResponseEntity<String> handle(E e) {

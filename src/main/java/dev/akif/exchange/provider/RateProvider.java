@@ -1,9 +1,10 @@
 package dev.akif.exchange.provider;
 
-import java.util.Map;
-
+import dev.akif.exchange.provider.dto.RateProviderResponse;
 import e.java.EOr;
 
 public interface RateProvider {
-    EOr<Map<String, Double>> rates();
+    String baseCurrency();
+
+    EOr<RateProviderResponse> latestRates();
 }

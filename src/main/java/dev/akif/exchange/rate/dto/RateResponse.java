@@ -13,7 +13,14 @@ public class RateResponse {
         this.rate   = rate;
     }
 
-    @Override public boolean equals(Object o) {
+    public RateResponse(RateRequest request, double rate) {
+        this.source = request.source;
+        this.target = request.target;
+        this.rate   = rate;
+    }
+
+    @Override
+    public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof RateResponse)) return false;
 
@@ -25,7 +32,8 @@ public class RateResponse {
         return this.rate == that.rate;
     }
 
-    @Override public int hashCode() {
+    @Override
+    public int hashCode() {
         int result;
         result = source.hashCode();
         result = 31 * result + target.hashCode();
@@ -33,7 +41,8 @@ public class RateResponse {
         return result;
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return new StringJoiner(",", "{", "}")
             .add("\"source\":\"" + source + "\"")
             .add("\"target\":\"" + target + "\"")
