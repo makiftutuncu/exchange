@@ -15,6 +15,8 @@ public interface Errors {
     }
 
     interface Conversion {
+        E conversionNotFound   = notFound.message("Cannot find conversion");
+        E cannotReadConversion = internalServerError.name("database").message("Cannot read conversion");
         E cannotSaveConversion = internalServerError.name("database").message("Cannot save conversion");
     }
 

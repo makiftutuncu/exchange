@@ -1,8 +1,17 @@
 package dev.akif.exchange.conversion.impl;
 
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.stereotype.Service;
 
 import dev.akif.exchange.common.CurrencyPair;
@@ -13,6 +22,7 @@ import dev.akif.exchange.conversion.dto.ConversionResponse;
 import dev.akif.exchange.conversion.model.Conversion;
 import dev.akif.exchange.provider.TimeProvider;
 import dev.akif.exchange.rate.RateService;
+import e.java.E;
 import e.java.EOr;
 
 @Service
@@ -22,14 +32,17 @@ public class ConversionServiceImpl implements ConversionService {
     private final ConversionRepository conversionRepository;
     private final RateService rateService;
     private final TimeProvider timeProvider;
+    private final int defaultPageSize;
 
     @Autowired
     public ConversionServiceImpl(ConversionRepository conversionRepository,
                                  RateService rateService,
-                                 TimeProvider timeProvider) {
+                                 TimeProvider timeProvider,
+                                 @Value("${conversion.paging.defaultSize}") int defaultPageSize) {
         this.conversionRepository = conversionRepository;
         this.rateService          = rateService;
         this.timeProvider         = timeProvider;
+        this.defaultPageSize      = defaultPageSize;
     }
 
     @Override
@@ -49,6 +62,7 @@ public class ConversionServiceImpl implements ConversionService {
                 t  -> Errors.Conversion.cannotSaveConversion.data("source", pair.getSource())
                                                             .data("target", pair.getTarget())
                                                             .data("amount", amount)
+                                                            .cause(E.fromThrowable(t))
             ).map(
                 ConversionResponse::new
             );
@@ -57,5 +71,44 @@ public class ConversionServiceImpl implements ConversionService {
         response.forEach(r -> logger.info("Converted, {} {} is {} {}", r.sourceAmount, r.source, r.targetAmount, r.target));
 
         return response;
+    }
+
+    @Override
+    public EOr<ConversionResponse> get(long id) {
+        logger.info("Getting conversion {}", id);
+
+        return EOr.catching(
+            () -> conversionRepository.findById(id),
+            t  -> Errors.Conversion.cannotReadConversion.data("id", id).cause(E.fromThrowable(t))
+        ).flatMap(maybeConversion ->
+            EOr.fromOptional(
+                maybeConversion,
+                () -> Errors.Conversion.conversionNotFound.data("id", id)
+            )
+        ).map(
+            ConversionResponse::new
+        );
+    }
+
+    @Override
+    public EOr<List<ConversionResponse>> list(LocalDate fromDate, LocalDate toDate, int page, int size, boolean newestFirst) {
+        long from = fromDate == null ? 0L : fromDate.atStartOfDay(ZoneOffset.UTC).toEpochSecond() * 1000;
+        long to   = toDate == null ? Long.MAX_VALUE : toDate.plusDays(1).atStartOfDay(ZoneOffset.UTC).toEpochSecond() * 1000;
+
+        PageRequest pageRequest = PageRequest.of(
+            EOr.from(page).filter(p -> p > 0).map(p -> p - 1).getOrElse(() -> 0),
+            EOr.from(size).filter(s -> s > 0 && s <= 50).getOrElse(() -> defaultPageSize),
+            Sort.by(newestFirst ? Order.desc("createdAt") : Order.asc("createdAt"))
+        );
+
+        return EOr.catching(
+            () -> conversionRepository.findAllByCreatedAtGreaterThanEqualAndCreatedAtLessThan(from, to, pageRequest),
+            t  -> Errors.Conversion.cannotReadConversion.data("page", pageRequest.getPageNumber())
+                                                        .data("size", pageRequest.getPageSize())
+                                                        .data("newestFirst", newestFirst)
+                                                        .cause(E.fromThrowable(t))
+        ).map(conversions ->
+            conversions.stream().map(ConversionResponse::new).collect(Collectors.toUnmodifiableList())
+        );
     }
 }

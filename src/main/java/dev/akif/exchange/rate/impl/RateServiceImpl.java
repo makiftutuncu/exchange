@@ -85,7 +85,9 @@ public class RateServiceImpl implements RateService {
 
         return EOr.catching(
             () -> rateRepository.findById(id),
-            t  -> Errors.Rate.cannotReadRate.data("source", id.getSource()).data("target", id.getTarget())
+            t  -> Errors.Rate.cannotReadRate.data("source", id.getSource())
+                                            .data("target", id.getTarget())
+                                            .cause(E.fromThrowable(t))
         ).map(maybeRate -> {
             Optional<Rate> filtered = maybeRate.filter(r ->
                 (timeProvider.now() - r.getUpdatedAt()) < rateFreshnessThresholdInMillis

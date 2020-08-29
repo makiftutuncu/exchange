@@ -38,6 +38,6 @@ public class ErrorHandler {
     private ResponseEntity<String> handle(E e) {
         return ResponseEntity.status(e.code().orElse(HttpStatus.INTERNAL_SERVER_ERROR.value()))
                              .contentType(MediaType.APPLICATION_JSON)
-                             .body(e.toString());
+                             .body(e.now().toString());
     }
 }

@@ -25,7 +25,7 @@ public class CurrencyPair implements Serializable {
         ).flatMap(s ->
             EOr.catching(
                 () -> Currency.getInstance(target),
-                t  -> Errors.Common.invalidCurrency.data("target", target)
+                t  -> Errors.Common.invalidCurrency.data("target", target).cause(E.fromThrowable(t))
             )
         ).map(t ->
             new CurrencyPair(source, target)
