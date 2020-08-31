@@ -48,7 +48,7 @@ public class PagedResponse<A> {
         StringJoiner dataJoiner = new StringJoiner(",", "[", "]");
         data.forEach(d -> dataJoiner.add(d.toString()));
         return new StringJoiner(",", "{", "}")
-            .add("\"data\":" + data)
+            .add("\"data\":" + dataJoiner.toString())
             .add("\"page\":" + page)
             .add("\"totalPages\":" + totalPages)
             .add("\"pageSize\":" + pageSize)

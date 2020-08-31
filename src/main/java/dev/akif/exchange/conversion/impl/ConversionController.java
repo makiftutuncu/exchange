@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,7 +38,7 @@ public class ConversionController extends Controller {
             CurrencyPair.of(request.source, request.target)
                         .flatMap(pair -> conversionService.convert(pair, request.amount));
 
-        return respond(response);
+        return respond(response, HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")

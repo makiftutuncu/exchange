@@ -10,6 +10,7 @@ public class ConversionResponse {
     public final double sourceAmount;
     public final String target;
     public final double targetAmount;
+    public final double rate;
     public final long createdAt;
 
     public ConversionResponse(Conversion conversion) {
@@ -18,6 +19,7 @@ public class ConversionResponse {
         this.sourceAmount = conversion.getSourceAmount();
         this.target       = conversion.getTarget();
         this.targetAmount = conversion.getTargetAmount();
+        this.rate         = conversion.getRate();
         this.createdAt    = conversion.getCreatedAt();
     }
 
@@ -33,6 +35,7 @@ public class ConversionResponse {
         if (this.sourceAmount != that.sourceAmount) return false;
         if (!this.target.equals(that.target)) return false;
         if (this.targetAmount != that.targetAmount) return false;
+        if (this.rate != that.rate) return false;
 
         return this.createdAt == that.createdAt;
     }
@@ -44,6 +47,7 @@ public class ConversionResponse {
         result = 31 * result + Double.hashCode(sourceAmount);
         result = 31 * result + target.hashCode();
         result = 31 * result + Double.hashCode(targetAmount);
+        result = 31 * result + Double.hashCode(rate);
         result = 31 * result + Long.hashCode(createdAt);
         return result;
     }
@@ -56,6 +60,7 @@ public class ConversionResponse {
             .add("\"sourceAmount\":" + sourceAmount)
             .add("\"target\":\"" + target + "\"")
             .add("\"targetAmount\":" + targetAmount)
+            .add("\"rate\":" + rate)
             .add("\"createdAt\":" + createdAt)
             .toString();
     }

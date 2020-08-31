@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.Currency;
 import java.util.StringJoiner;
 
-import e.java.E;
 import e.java.EOr;
 
 public class CurrencyPair implements Serializable {
@@ -21,11 +20,11 @@ public class CurrencyPair implements Serializable {
     public static EOr<CurrencyPair> of(String source, String target) {
         return EOr.catching(
             () -> Currency.getInstance(source),
-            t  -> Errors.Common.invalidCurrency.data("source", source).cause(E.fromThrowable(t))
+            t  -> Errors.Common.invalidCurrency.data("source", source)
         ).flatMap(s ->
             EOr.catching(
                 () -> Currency.getInstance(target),
-                t  -> Errors.Common.invalidCurrency.data("target", target).cause(E.fromThrowable(t))
+                t  -> Errors.Common.invalidCurrency.data("target", target)
             )
         ).map(t ->
             new CurrencyPair(source, target)
