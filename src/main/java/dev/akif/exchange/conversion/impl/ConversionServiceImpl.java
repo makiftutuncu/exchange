@@ -2,8 +2,6 @@ package dev.akif.exchange.conversion.impl;
 
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.common.Errors;
+import dev.akif.exchange.common.PagedResponse;
 import dev.akif.exchange.conversion.ConversionRepository;
 import dev.akif.exchange.conversion.ConversionService;
 import dev.akif.exchange.conversion.dto.ConversionResponse;
@@ -91,7 +90,7 @@ public class ConversionServiceImpl implements ConversionService {
     }
 
     @Override
-    public EOr<List<ConversionResponse>> list(LocalDate fromDate, LocalDate toDate, int page, int size, boolean newestFirst) {
+    public EOr<PagedResponse<ConversionResponse>> list(LocalDate fromDate, LocalDate toDate, int page, int size, boolean newestFirst) {
         long from = fromDate == null ? 0L : fromDate.atStartOfDay(ZoneOffset.UTC).toEpochSecond() * 1000;
         long to   = toDate == null ? Long.MAX_VALUE : toDate.plusDays(1).atStartOfDay(ZoneOffset.UTC).toEpochSecond() * 1000;
 
@@ -107,8 +106,14 @@ public class ConversionServiceImpl implements ConversionService {
                                                         .data("size", pageRequest.getPageSize())
                                                         .data("newestFirst", newestFirst)
                                                         .cause(E.fromThrowable(t))
-        ).map(conversions ->
-            conversions.stream().map(ConversionResponse::new).collect(Collectors.toUnmodifiableList())
+        ).map(conversionsPage ->
+            new PagedResponse<>(
+                conversionsPage.map(ConversionResponse::new).toList(),
+                conversionsPage.getPageable().getPageNumber() + 1,
+                conversionsPage.getTotalPages(),
+                conversionsPage.getPageable().getPageSize(),
+                conversionsPage.getTotalElements()
+            )
         );
     }
 }

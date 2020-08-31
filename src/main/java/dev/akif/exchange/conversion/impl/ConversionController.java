@@ -1,7 +1,6 @@
 package dev.akif.exchange.conversion.impl;
 
 import java.time.LocalDate;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -16,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import dev.akif.exchange.common.Controller;
 import dev.akif.exchange.common.CurrencyPair;
+import dev.akif.exchange.common.PagedResponse;
 import dev.akif.exchange.conversion.ConversionService;
 import dev.akif.exchange.conversion.dto.ConversionRequest;
 import dev.akif.exchange.conversion.dto.ConversionResponse;
@@ -48,14 +48,14 @@ public class ConversionController extends Controller {
     }
 
     @GetMapping
-    public ResponseEntity<List<ConversionResponse>> list(
+    public ResponseEntity<PagedResponse<ConversionResponse>> list(
         @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
         @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
         @RequestParam(value = "page", required = false, defaultValue = "1") int page,
         @RequestParam(value = "size", required = false, defaultValue = "0") int size,
         @RequestParam(value = "newestFirst", required = false, defaultValue = "true") boolean newestFirst
     ) {
-        EOr<List<ConversionResponse>> response = conversionService.list(from, to, page, size, newestFirst);
+        EOr<PagedResponse<ConversionResponse>> response = conversionService.list(from, to, page, size, newestFirst);
 
         return respond(response);
     }

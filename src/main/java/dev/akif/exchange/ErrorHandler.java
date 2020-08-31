@@ -5,22 +5,20 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import dev.akif.exchange.common.Errors;
 import e.java.E;
 import e.java.EException;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class ErrorHandler {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<String> handle(NoHandlerFoundException exception) {
-        logger.debug("No handler found");
-
         return handle(Errors.notFound.data("method", exception.getHttpMethod()).data("url", exception.getRequestURL()));
     }
 
