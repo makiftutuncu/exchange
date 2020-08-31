@@ -1,6 +1,7 @@
 package dev.akif.exchange.provider.impl.fixerio;
 
 import java.net.URI;
+import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
 
@@ -30,11 +31,12 @@ public class FixerIO extends ThirdPartyProvider implements RateProvider {
     private final String accessKey;
 
     @Autowired
-    public FixerIO(@Value("${provider.fixerio.baseCurrency}") String baseCurrency,
+    public FixerIO(HttpClient httpClient,
+                   @Value("${provider.fixerio.baseCurrency}") String baseCurrency,
                    @Value("${provider.fixerio.host}") String host,
                    @Value("${provider.fixerio.accessKey}") String accessKey,
                    @Value("${provider.thirdParty.timeoutInMillis}") long timeoutInMillis) {
-        super(timeoutInMillis);
+        super(httpClient, timeoutInMillis);
         this.baseCurrency = baseCurrency;
         this.host         = host;
         this.accessKey    = accessKey;

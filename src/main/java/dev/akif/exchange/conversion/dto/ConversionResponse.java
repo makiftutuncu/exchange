@@ -13,14 +13,18 @@ public class ConversionResponse {
     public final double rate;
     public final long createdAt;
 
-    public ConversionResponse(Conversion conversion) {
-        this.id           = conversion.getId();
+    public ConversionResponse(long id, Conversion conversion) {
+        this.id           = id;
         this.source       = conversion.getSource();
         this.sourceAmount = conversion.getSourceAmount();
         this.target       = conversion.getTarget();
         this.targetAmount = conversion.getTargetAmount();
         this.rate         = conversion.getRate();
         this.createdAt    = conversion.getCreatedAt();
+    }
+
+    public ConversionResponse(Conversion conversion) {
+        this(conversion.getId(), conversion);
     }
 
     @Override

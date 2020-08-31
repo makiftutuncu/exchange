@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.common.Errors;
 import dev.akif.exchange.common.PagedResponse;
+import dev.akif.exchange.common.PagingHelper;
 import dev.akif.exchange.conversion.ConversionRepository;
 import dev.akif.exchange.conversion.ConversionService;
 import dev.akif.exchange.conversion.dto.ConversionResponse;
@@ -91,19 +92,21 @@ public class ConversionServiceImpl implements ConversionService {
 
     @Override
     public EOr<PagedResponse<ConversionResponse>> list(LocalDate fromDate, LocalDate toDate, int page, int size, boolean newestFirst) {
-        long from = fromDate == null ? 0L : fromDate.atStartOfDay(ZoneOffset.UTC).toEpochSecond() * 1000;
-        long to   = toDate == null ? Long.MAX_VALUE : toDate.plusDays(1).atStartOfDay(ZoneOffset.UTC).toEpochSecond() * 1000;
+        long from = PagingHelper.from(fromDate);
+        long to   = PagingHelper.to(toDate);
 
         PageRequest pageRequest = PageRequest.of(
-            EOr.from(page).filter(p -> p > 0).map(p -> p - 1).getOrElse(() -> 0),
-            EOr.from(size).filter(s -> s > 0 && s <= 50).getOrElse(() -> defaultPageSize),
+            PagingHelper.page(page),
+            PagingHelper.size(size,  defaultPageSize),
             Sort.by(newestFirst ? Order.desc("createdAt") : Order.asc("createdAt"))
         );
 
         return EOr.catching(
             () -> conversionRepository.findAllByCreatedAtGreaterThanEqualAndCreatedAtLessThan(from, to, pageRequest),
-            t  -> Errors.Conversion.cannotReadConversion.data("page", pageRequest.getPageNumber())
-                                                        .data("size", pageRequest.getPageSize())
+            t  -> Errors.Conversion.cannotReadConversion.data("from", fromDate)
+                                                        .data("to", toDate)
+                                                        .data("page", page)
+                                                        .data("size", size)
                                                         .data("newestFirst", newestFirst)
                                                         .cause(E.fromThrowable(t))
         ).map(conversionsPage ->

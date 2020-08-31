@@ -8,11 +8,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
 public abstract class ThirdPartyProvider {
-    protected final HttpClient httpClient = HttpClient.newHttpClient();
-
+    protected final HttpClient httpClient;
     protected final long timeoutInMillis;
 
-    protected ThirdPartyProvider(long timeoutInMillis) {
+    protected ThirdPartyProvider(HttpClient httpClient, long timeoutInMillis) {
+        this.httpClient      = httpClient;
         this.timeoutInMillis = timeoutInMillis;
     }
 
