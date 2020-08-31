@@ -19,7 +19,6 @@ import e.java.EException;
 public class ErrorHandler {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    @Autowired
     private final TimeProvider timeProvider;
 
     @Autowired

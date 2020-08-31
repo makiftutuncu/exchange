@@ -48,7 +48,7 @@ public class ConversionServiceTest {
     private TimeProvider timeProvider;
 
     @Value("${conversion.paging.defaultSize}")
-    protected int defaultPageSize;
+    private int defaultPageSize;
 
     @Autowired
     private ConversionServiceImpl conversionService;

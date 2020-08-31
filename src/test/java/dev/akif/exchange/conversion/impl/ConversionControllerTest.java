@@ -30,9 +30,7 @@ import dev.akif.exchange.provider.TimeProvider;
 import e.java.E;
 import e.java.EOr;
 
-@SpringBootTest(properties = {
-    "spring.datasource.url=jdbc:h2:mem:exchangetest;DB_CLOSE_DELAY=-1"
-})
+@SpringBootTest
 @AutoConfigureMockMvc
 public class ConversionControllerTest {
     @Autowired

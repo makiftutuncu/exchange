@@ -56,7 +56,7 @@ public class RateServiceImpl implements RateService {
         return response;
     }
 
-    private EOr<RateResponse> rateOfBaseTo(String currency) {
+    public EOr<RateResponse> rateOfBaseTo(String currency) {
         String base = rateProvider.baseCurrency();
 
         if (currency.equals(base)) {
@@ -80,7 +80,7 @@ public class RateServiceImpl implements RateService {
         return rate.map(r -> new RateResponse(base, currency, r));
     }
 
-    private EOr<Optional<Rate>> getRateFromDB(CurrencyPair id) {
+    public EOr<Optional<Rate>> getRateFromDB(CurrencyPair id) {
         logger.debug("Getting rate for {} from DB", id);
 
         return EOr.catching(
@@ -101,7 +101,7 @@ public class RateServiceImpl implements RateService {
         });
     }
 
-    private EOr<RateProviderResponse> getAndSaveLatestRates() {
+    public EOr<RateProviderResponse> getAndSaveLatestRates() {
         return rateProvider.latestRates().map(ratesResponse -> {
             String source = ratesResponse.getSource();
             long now = timeProvider.now();
