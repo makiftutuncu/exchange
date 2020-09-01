@@ -34,6 +34,8 @@ gradle bootRun
 
 By default, Exchange API runs on `localhost:8080`.
 
+There is also a playground deployed on Heroku at https://akifs-exchange-api.herokuapp.com. Feel free to visit https://akifs-exchange-api.herokuapp.com/swagger.html and play with it.
+
 ## Configuration
 
 There is no need for a manual configuration as default values are enough to run Exchange API out-of-the-box. However, if you wish to make your own configuration (change credentials etc.), you can do so by editing [`application.properties`](src/main/resources/application.properties) file.
