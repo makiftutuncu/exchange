@@ -5,13 +5,13 @@ import org.springframework.http.HttpStatus;
 import e.java.E;
 
 public interface Errors {
-    E badRequest          = E.fromCode(HttpStatus.BAD_REQUEST.value()).name("invalid-input");
+    E badRequest          = E.fromCode(HttpStatus.BAD_REQUEST.value()).name("bad-request");
     E notFound            = E.fromCode(HttpStatus.NOT_FOUND.value()).name("not-found");
     E internalServerError = E.fromCode(HttpStatus.INTERNAL_SERVER_ERROR.value()).name("unknown");
     E serviceUnavailable  = E.fromCode(HttpStatus.SERVICE_UNAVAILABLE.value()).name("service-unavailable");
 
     interface Common {
-        E invalidCurrency = badRequest.message("Currency is invalid!");
+        E invalidCurrency = badRequest.name("invalid-input").message("Currency is invalid");
     }
 
     interface Conversion {
