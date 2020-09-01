@@ -51,7 +51,7 @@ public class FixerIO extends ThirdPartyProvider implements RateProvider {
     public EOr<RateProviderResponse> latestRates() {
         logger.info("Getting latest rates");
 
-        URI uri = URI.create(host + "/latest?access_key=" + accessKey);
+        URI uri = URI.create(String.format("%s/latest?access_key=%s", host, accessKey));
         HttpRequest request = jsonRequest().GET().uri(uri).build();
 
         return EOr.catching(

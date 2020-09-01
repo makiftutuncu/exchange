@@ -191,8 +191,8 @@ public class ConversionController extends Controller {
     public ResponseEntity<PagedResponse<ConversionResponse>> list(
         @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
         @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-        @RequestParam(value = "page", required = false) int page,
-        @RequestParam(value = "size", required = false) int size,
+        @RequestParam(value = "page", required = false, defaultValue = "1") int page,
+        @RequestParam(value = "size", required = false, defaultValue = "5") int size,
         @RequestParam(value = "newestFirst", required = false, defaultValue = "true") boolean newestFirst
     ) {
         EOr<PagedResponse<ConversionResponse>> response = conversionService.list(from, to, page, size, newestFirst);

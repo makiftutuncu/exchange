@@ -13,6 +13,16 @@ public class ConversionResponse {
     public final double rate;
     public final long createdAt;
 
+    public ConversionResponse() {
+        this.id           = -1L;
+        this.source       = null;
+        this.sourceAmount = 0.0;
+        this.target       = null;
+        this.targetAmount = 0.0;
+        this.rate         = 0.0;
+        this.createdAt    = 0L;
+    }
+
     public ConversionResponse(long id, Conversion conversion) {
         this.id           = id;
         this.source       = conversion.getSource();
