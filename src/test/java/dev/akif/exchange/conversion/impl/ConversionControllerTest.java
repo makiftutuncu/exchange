@@ -19,6 +19,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.common.Errors;
 import dev.akif.exchange.common.PagedResponse;
@@ -83,7 +85,8 @@ public class ConversionControllerTest {
         MockHttpServletResponse response = perform(conversionRequest("USD", "TRY", 10.0));
 
         assertEquals(201, response.getStatus());
-        assertEquals(expected.toString(), response.getContentAsString());
+        ObjectMapper mapper = new ObjectMapper();
+        assertEquals(mapper.readTree(expected.toString()), mapper.readTree(response.getContentAsString()));
     }
 
     @Test
@@ -109,7 +112,8 @@ public class ConversionControllerTest {
         MockHttpServletResponse response = perform(getRequest(2L));
 
         assertEquals(200, response.getStatus());
-        assertEquals(expected.toString(), response.getContentAsString());
+        ObjectMapper mapper = new ObjectMapper();
+        assertEquals(mapper.readTree(expected.toString()), mapper.readTree(response.getContentAsString()));
     }
 
     @Test
@@ -140,7 +144,8 @@ public class ConversionControllerTest {
         MockHttpServletResponse response = perform(listRequest(null, null, 1, 5, true));
 
         assertEquals(200, response.getStatus());
-        assertEquals(expected.toString(), response.getContentAsString());
+        ObjectMapper mapper = new ObjectMapper();
+        assertEquals(mapper.readTree(expected.toString()), mapper.readTree(response.getContentAsString()));
     }
 
     private MockHttpServletRequestBuilder conversionRequest(String source, String target, double amount) {

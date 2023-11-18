@@ -15,6 +15,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.common.Errors;
 import dev.akif.exchange.provider.TimeProvider;
@@ -80,7 +82,8 @@ public class RateControllerTest {
         MockHttpServletResponse response = perform(ratesRequest("USD", "TRY"));
 
         assertEquals(200, response.getStatus());
-        assertEquals(expected.toString(), response.getContentAsString());
+        ObjectMapper mapper = new ObjectMapper();
+        assertEquals(mapper.readTree(expected.toString()), mapper.readTree(response.getContentAsString()));
     }
 
     private MockHttpServletRequestBuilder ratesRequest(String source, String target) {
