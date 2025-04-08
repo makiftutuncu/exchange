@@ -2,49 +2,48 @@ package dev.akif.exchange;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.servlet.NoHandlerFoundException;
-
-import dev.akif.exchange.common.Errors;
-import dev.akif.exchange.provider.TimeProvider;
-import e.java.E;
-import e.java.EException;
 
 @RestControllerAdvice
 public class ErrorHandler {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final TimeProvider timeProvider;
+  @ExceptionHandler(NoHandlerFoundException.class)
+  public ResponseEntity<String> handle(NoHandlerFoundException exception) {
+    return handle(
+        new HttpClientErrorException(
+            exception.getHttpMethod() + " " + exception.getRequestURL(),
+            HttpStatus.NOT_FOUND,
+            "not-found",
+            null,
+            null,
+            null));
+  }
 
-    @Autowired
-    public ErrorHandler(TimeProvider timeProvider) {
-        this.timeProvider = timeProvider;
-    }
+  @ExceptionHandler(HttpStatusCodeException.class)
+  public ResponseEntity<String> handle(HttpStatusCodeException e) {
+    return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
+  }
 
-    @ExceptionHandler(NoHandlerFoundException.class)
-    public ResponseEntity<String> handle(NoHandlerFoundException exception) {
-        return handle(Errors.notFound.data("method", exception.getHttpMethod()).data("url", exception.getRequestURL()));
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handle(Exception exception) {
-        logger.error("Caught an exception", exception);
-
-        E e = exception instanceof EException ?
-            ((EException) exception).e :
-            Errors.internalServerError.message("An unknown error occurred").cause(E.fromThrowable(exception));
-
-        return handle(e);
-    }
-
-    private ResponseEntity<String> handle(E e) {
-        return ResponseEntity.status(e.code().orElse(HttpStatus.INTERNAL_SERVER_ERROR.value()))
-                             .contentType(MediaType.APPLICATION_JSON)
-                             .body(e.time(timeProvider.now()).toString());
-    }
+  @ExceptionHandler(Exception.class)
+  public ResponseEntity<String> handle(Exception exception) {
+    logger.error("Caught an exception", exception);
+    HttpStatusCodeException e =
+        new HttpServerErrorException(
+            "An unknown error occurred",
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "unknown",
+            null,
+            null,
+            null);
+    e.initCause(exception);
+    return handle(e);
+  }
 }

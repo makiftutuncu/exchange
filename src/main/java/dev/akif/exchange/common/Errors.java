@@ -1,31 +1,99 @@
 package dev.akif.exchange.common;
 
+import java.util.Map;
 import org.springframework.http.HttpStatus;
-
-import e.java.E;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 
 public interface Errors {
-    E badRequest          = E.fromCode(HttpStatus.BAD_REQUEST.value()).name("bad-request");
-    E notFound            = E.fromCode(HttpStatus.NOT_FOUND.value()).name("not-found");
-    E internalServerError = E.fromCode(HttpStatus.INTERNAL_SERVER_ERROR.value()).name("unknown");
-    E serviceUnavailable  = E.fromCode(HttpStatus.SERVICE_UNAVAILABLE.value()).name("service-unavailable");
+  interface Common {
+    static HttpStatusCodeException invalidCurrency(String type, String value) {
+      return new HttpClientErrorException(
+          type + " currency " + value + " is invalid",
+          HttpStatus.BAD_REQUEST,
+          "bad-request",
+          null,
+          null,
+          null);
+    }
+  }
 
-    interface Common {
-        E invalidCurrency = badRequest.name("invalid-input").message("Currency is invalid");
+  interface Conversion {
+    static HttpStatusCodeException conversionNotFound(long id) {
+      return new HttpClientErrorException(
+          "Cannot find conversion " + id, HttpStatus.NOT_FOUND, "not-found", null, null, null);
     }
 
-    interface Conversion {
-        E conversionNotFound   = notFound.message("Cannot find conversion");
-        E cannotReadConversion = internalServerError.name("database").message("Cannot read conversion");
-        E cannotSaveConversion = internalServerError.name("database").message("Cannot save conversion");
+    static HttpStatusCodeException cannotReadConversion(
+        Exception cause, Map<String, String> details) {
+      HttpStatusCodeException exception =
+          new HttpClientErrorException(
+              "Cannot read conversion " + details,
+              HttpStatus.NOT_FOUND,
+              "not-found",
+              null,
+              null,
+              null);
+      exception.initCause(cause);
+      return exception;
     }
 
-    interface FixerIO {
-        E ratesRequestFailed = serviceUnavailable.message("Cannot get rates from fixer.io");
-        E parsingRatesFailed = serviceUnavailable.message("Cannot parse rates from fixer.io");
+    static HttpStatusCodeException cannotSaveConversion(
+        Exception cause, Map<String, String> details) {
+      HttpStatusCodeException exception =
+          new HttpServerErrorException(
+              "Cannot save conversion " + details,
+              HttpStatus.INTERNAL_SERVER_ERROR,
+              "unknown",
+              null,
+              null,
+              null);
+      exception.initCause(cause);
+      return exception;
+    }
+  }
+
+  interface FixerIO {
+    static HttpStatusCodeException ratesRequestFailed(Exception cause) {
+      HttpStatusCodeException exception =
+          new HttpServerErrorException(
+              "Cannot get rates from fixer.io",
+              HttpStatus.SERVICE_UNAVAILABLE,
+              "service-unavailable",
+              null,
+              null,
+              null);
+      exception.initCause(cause);
+      return exception;
     }
 
-    interface Rate {
-        E cannotReadRate = internalServerError.name("database").message("Cannot read rate");
+    static HttpStatusCodeException parsingRatesFailed(Exception cause) {
+      HttpStatusCodeException exception =
+          new HttpServerErrorException(
+              "Cannot parse rates from fixer.io",
+              HttpStatus.SERVICE_UNAVAILABLE,
+              "service-unavailable",
+              null,
+              null,
+              null);
+      exception.initCause(cause);
+      return exception;
     }
+  }
+
+  interface Rate {
+    static HttpStatusCodeException cannotReadRate(Exception cause, String source, String target) {
+      HttpStatusCodeException exception =
+          new HttpServerErrorException(
+              "Cannot read rate from " + source + " to " + target,
+              HttpStatus.INTERNAL_SERVER_ERROR,
+              "unknown",
+              null,
+              null,
+              null);
+      exception.initCause(cause);
+      return exception;
+    }
+  }
 }

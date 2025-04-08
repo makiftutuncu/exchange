@@ -1,39 +1,27 @@
 package dev.akif.exchange.common;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import e.java.E;
-import e.java.EOr;
+import org.springframework.web.client.HttpStatusCodeException;
 
 public class CurrencyPairTest {
-    @Test
-    @DisplayName("validating and creating a currency pair")
-    void validatingAndCreatingACurrencyPair() {
-        E e = Errors.Common.invalidCurrency;
+  @Test
+  @DisplayName("validating and creating a currency pair")
+  void validatingAndCreatingACurrencyPair() {
+    var e1 = assertThrows(HttpStatusCodeException.class, () -> CurrencyPair.of("", ""));
+    assertEquals(Errors.Common.invalidCurrency("source", "").getMessage(), e1.getMessage());
 
-        EOr<CurrencyPair> pair1 = CurrencyPair.of("", "");
+    var e2 = assertThrows(HttpStatusCodeException.class, () -> CurrencyPair.of("FOO", ""));
+    assertEquals(Errors.Common.invalidCurrency("source", "FOO").getMessage(), e2.getMessage());
 
-        assertEquals(e.data("source", "").toEOr(), pair1);
+    var e3 = assertThrows(HttpStatusCodeException.class, () -> CurrencyPair.of("USD", ""));
+    assertEquals(Errors.Common.invalidCurrency("target", "").getMessage(), e3.getMessage());
 
-        EOr<CurrencyPair> pair2 = CurrencyPair.of("FOO", "");
+    var e4 = assertThrows(HttpStatusCodeException.class, () -> CurrencyPair.of("USD", "FOO"));
+    assertEquals(Errors.Common.invalidCurrency("target", "FOO").getMessage(), e4.getMessage());
 
-        assertEquals(e.data("source", "FOO").toEOr(), pair2);
-
-        EOr<CurrencyPair> pair3 = CurrencyPair.of("USD", "");
-
-        assertEquals(e.data("target", "").toEOr(), pair3);
-
-        EOr<CurrencyPair> pair4 = CurrencyPair.of("USD", "FOO");
-
-        assertEquals(e.data("target", "FOO").toEOr(), pair4);
-
-        EOr<CurrencyPair> pair5 = CurrencyPair.of("USD", "TRY");
-
-        assertTrue(pair5.hasValue());
-        assertEquals(new CurrencyPair("USD", "TRY"), pair5.value().get());
-    }
+    assertDoesNotThrow(() -> CurrencyPair.of("USD", "TRY"));
+  }
 }

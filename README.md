@@ -14,12 +14,11 @@ Exchange API is a RESTful API providing exchange rates and conversions for many 
 
 ## Technologies
 
-Exchange API is a [Spring Boot](https://spring.io/projects/spring-boot) project written in [Java 11](https://openjdk.java.net/projects/jdk/11) and it uses following:
+Exchange API is a [Spring Boot](https://spring.io/projects/spring-boot) project written in [Java 24](https://openjdk.java.net/projects/jdk/24) and it uses following:
 
 * [fixer.io](https://fixer.io) as exchange rate provider
 * [Spring Data](https://spring.io/projects/spring-data) for data persistence
 * [H2](https://www.h2database.com) as database
-* [e](https://github.com/makiftutuncu/e) for error management
 * [Spring Doc](https://springdoc.org) for API documentation
 * [JUnit 5](https://junit.org/junit5) and [HttpClientMock](https://github.com/PGSSoft/HttpClientMock) for testing
 * [Gradle](https://gradle.org) as build tool
@@ -34,11 +33,9 @@ gradle bootRun
 
 By default, Exchange API runs on `localhost:8080`.
 
-There is also a playground deployed on Heroku at https://akifs-exchange-api.herokuapp.com. Feel free to visit https://akifs-exchange-api.herokuapp.com/swagger.html and play with it.
-
 ## Configuration
 
-There is no need for a manual configuration as default values are enough to run Exchange API out-of-the-box. However, if you wish to make your own configuration (change credentials etc.), you can do so by editing [`application.properties`](src/main/resources/application.properties) file.
+Exchange API can run out-of-the-box as long as credentials for rate provider is defined as `FIXER_IO_KEY` environment variable or in [`application.properties`](src/main/resources/application.properties) file.
 
 ## Documentation
 

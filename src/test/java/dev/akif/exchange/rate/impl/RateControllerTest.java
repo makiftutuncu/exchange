@@ -2,6 +2,11 @@ package dev.akif.exchange.rate.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.akif.exchange.common.CurrencyPair;
+import dev.akif.exchange.common.Errors;
+import dev.akif.exchange.rate.RateService;
+import dev.akif.exchange.rate.dto.RateResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,91 +14,67 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import dev.akif.exchange.common.CurrencyPair;
-import dev.akif.exchange.common.Errors;
-import dev.akif.exchange.provider.TimeProvider;
-import dev.akif.exchange.rate.RateService;
-import dev.akif.exchange.rate.dto.RateResponse;
-import e.java.E;
-import e.java.EOr;
-
-@SpringBootTest(properties = {
-    "spring.datasource.url=jdbc:h2:mem:exchangetest;DB_CLOSE_DELAY=-1"
-})
+@SpringBootTest(properties = {"spring.datasource.url=jdbc:h2:mem:exchangetest;DB_CLOSE_DELAY=-1"})
 @AutoConfigureMockMvc
 public class RateControllerTest {
-    @Autowired
-    private MockMvc mockMvc;
+  @Autowired private MockMvc mockMvc;
 
-    @MockBean
-    private RateService rateService;
+  @MockitoBean private RateService rateService;
 
-    @MockBean
-    private TimeProvider timeProvider;
+  @Test
+  @DisplayName("getting rates fails with invalid input")
+  void gettingRatesFailsWithInvalidInput() throws Exception {
+    MockHttpServletResponse response = perform(ratesRequest("foo", ""));
 
-    @BeforeEach
-    void setUp() {
-        Mockito.when(timeProvider.now()).thenReturn(123456789L);
-    }
+    var expected = Errors.Common.invalidCurrency("source", "foo");
 
-    @Test
-    @DisplayName("getting rates fails with invalid input")
-    void gettingRatesFailsWithInvalidInput() throws Exception {
-        MockHttpServletResponse response = perform(ratesRequest("foo", ""));
+    assertEquals(expected.getStatusCode().value(), response.getStatus());
+    assertEquals(expected.getMessage(), response.getContentAsString());
+  }
 
-        E expected = Errors.Common.invalidCurrency.data("source", "foo").time(123456789L);
+  @Test
+  @DisplayName("getting rates fails when service fails")
+  void gettingRatesFailsWhenServiceFails() throws Exception {
+    CurrencyPair pair = new CurrencyPair("USD", "TRY");
 
-        assertEquals(expected.code().get(), response.getStatus());
-        assertEquals(expected.toString(), response.getContentAsString());
-    }
+    var e = Errors.Rate.cannotReadRate(null, "USD", "TRY");
 
-    @Test
-    @DisplayName("getting rates fails when service fails")
-    void gettingRatesFailsWhenServiceFails() throws Exception {
-        CurrencyPair pair = new CurrencyPair("USD", "TRY");
+    Mockito.when(rateService.rate(pair)).thenThrow(e);
 
-        E e = Errors.Rate.cannotReadRate.time(123456789L);
+    MockHttpServletResponse response = perform(ratesRequest("USD", "TRY"));
 
-        Mockito.when(rateService.rate(pair)).thenReturn(e.toEOr());
+    assertEquals(e.getStatusCode().value(), response.getStatus());
+    assertEquals(e.getMessage(), response.getContentAsString());
+  }
 
-        MockHttpServletResponse response = perform(ratesRequest("USD", "TRY"));
+  @Test
+  @DisplayName("getting rates returns rates")
+  void gettingRatesReturnsRates() throws Exception {
+    CurrencyPair pair = new CurrencyPair("USD", "TRY");
 
-        assertEquals(e.code().get(), response.getStatus());
-        assertEquals(e.toString(), response.getContentAsString());
-    }
+    RateResponse expected = new RateResponse(pair, 7.0);
 
-    @Test
-    @DisplayName("getting rates returns rates")
-    void gettingRatesReturnsRates() throws Exception {
-        CurrencyPair pair = new CurrencyPair("USD", "TRY");
+    Mockito.when(rateService.rate(pair)).thenReturn(expected);
 
-        RateResponse expected = new RateResponse(pair, 7.0);
+    MockHttpServletResponse response = perform(ratesRequest("USD", "TRY"));
 
-        Mockito.when(rateService.rate(pair)).thenReturn(EOr.from(expected));
+    assertEquals(200, response.getStatus());
+    ObjectMapper mapper = new ObjectMapper();
+    assertEquals(
+        mapper.readTree(expected.toString()), mapper.readTree(response.getContentAsString()));
+  }
 
-        MockHttpServletResponse response = perform(ratesRequest("USD", "TRY"));
+  private MockHttpServletRequestBuilder ratesRequest(String source, String target) {
+    return MockMvcRequestBuilders.get("/rates").param("source", source).param("target", target);
+  }
 
-        assertEquals(200, response.getStatus());
-        ObjectMapper mapper = new ObjectMapper();
-        assertEquals(mapper.readTree(expected.toString()), mapper.readTree(response.getContentAsString()));
-    }
-
-    private MockHttpServletRequestBuilder ratesRequest(String source, String target) {
-        return MockMvcRequestBuilders
-                .get("/rates")
-                .param("source", source)
-                .param("target", target);
-    }
-
-    private MockHttpServletResponse perform(MockHttpServletRequestBuilder request) throws Exception {
-        return mockMvc.perform(request).andReturn().getResponse();
-    }
+  private MockHttpServletResponse perform(MockHttpServletRequestBuilder request) throws Exception {
+    return mockMvc.perform(request).andReturn().getResponse();
+  }
 }

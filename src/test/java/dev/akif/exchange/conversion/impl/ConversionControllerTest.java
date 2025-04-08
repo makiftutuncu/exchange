@@ -2,25 +2,7 @@ package dev.akif.exchange.conversion.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.time.LocalDate;
-import java.util.List;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.common.Errors;
 import dev.akif.exchange.common.PagedResponse;
@@ -28,151 +10,168 @@ import dev.akif.exchange.conversion.ConversionService;
 import dev.akif.exchange.conversion.dto.ConversionRequest;
 import dev.akif.exchange.conversion.dto.ConversionResponse;
 import dev.akif.exchange.conversion.model.Conversion;
-import dev.akif.exchange.provider.TimeProvider;
-import e.java.E;
-import e.java.EOr;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-@SpringBootTest(properties = {
-    "spring.datasource.url=jdbc:h2:mem:exchangetest;DB_CLOSE_DELAY=-1"
-})
+@SpringBootTest(properties = {"spring.datasource.url=jdbc:h2:mem:exchangetest;DB_CLOSE_DELAY=-1"})
 @AutoConfigureMockMvc
 public class ConversionControllerTest {
-    @Autowired
-    private MockMvc mockMvc;
+  @Autowired private MockMvc mockMvc;
 
-    @MockBean
-    private ConversionService conversionService;
+  @MockitoBean private ConversionService conversionService;
 
-    @MockBean
-    private TimeProvider timeProvider;
+  @Test
+  @DisplayName("creating a new conversion fails with invalid input")
+  void creatingANewConversionFailsWithInvalidInput() throws Exception {
+    MockHttpServletResponse response = perform(conversionRequest("foo", "", 0.0));
 
-    @BeforeEach
-    void setUp() {
-        Mockito.when(timeProvider.now()).thenReturn(123456789L);
-    }
+    var expected = Errors.Common.invalidCurrency("source", "foo");
 
-    @Test
-    @DisplayName("creating a new conversion fails with invalid input")
-    void creatingANewConversionFailsWithInvalidInput() throws Exception {
-        MockHttpServletResponse response = perform(conversionRequest("foo", "", 0.0));
+    assertEquals(expected.getStatusCode().value(), response.getStatus());
+    assertEquals(expected.getMessage(), response.getContentAsString());
+  }
 
-        E expected = Errors.Common.invalidCurrency.data("source", "foo").time(123456789L);
+  @Test
+  @DisplayName("creating a new conversion fails when service fails")
+  void creatingANewConversionFailsWhenServiceFails() throws Exception {
+    var e = Errors.Conversion.cannotSaveConversion(null, Map.of());
 
-        assertEquals(expected.code().get(), response.getStatus());
-        assertEquals(expected.toString(), response.getContentAsString());
-    }
+    Mockito.when(conversionService.convert(new CurrencyPair("USD", "TRY"), 10.0)).thenThrow(e);
 
-    @Test
-    @DisplayName("creating a new conversion fails when service fails")
-    void creatingANewConversionFailsWhenServiceFails() throws Exception {
-        E e = Errors.Conversion.cannotSaveConversion.time(123456789L);
+    MockHttpServletResponse response = perform(conversionRequest("USD", "TRY", 10.0));
 
-        Mockito.when(conversionService.convert(new CurrencyPair("USD", "TRY"), 10.0)).thenReturn(e.toEOr());
+    assertEquals(e.getStatusCode().value(), response.getStatus());
+    assertEquals(e.getMessage(), response.getContentAsString());
+  }
 
-        MockHttpServletResponse response = perform(conversionRequest("USD", "TRY", 10.0));
+  @Test
+  @DisplayName("creating a new conversion returns created conversion")
+  void creatingANewConversionReturnsCreatedConversion() throws Exception {
+    ConversionResponse expected =
+        new ConversionResponse(
+            new Conversion(new CurrencyPair("USD", "TRY"), 7.0, 10.0, 70.0, 123456789L));
 
-        assertEquals(e.code().get(), response.getStatus());
-        assertEquals(e.toString(), response.getContentAsString());
-    }
+    Mockito.when(conversionService.convert(new CurrencyPair("USD", "TRY"), 10.0))
+        .thenReturn(expected);
 
-    @Test
-    @DisplayName("creating a new conversion returns created conversion")
-    void creatingANewConversionReturnsCreatedConversion() throws Exception {
-        ConversionResponse expected = new ConversionResponse(new Conversion(new CurrencyPair("USD", "TRY"), 7.0, 10.0, 70.0, 123456789L));
+    MockHttpServletResponse response = perform(conversionRequest("USD", "TRY", 10.0));
 
-        Mockito.when(conversionService.convert(new CurrencyPair("USD", "TRY"), 10.0)).thenReturn(EOr.from(expected));
+    assertEquals(201, response.getStatus());
+    ObjectMapper mapper = new ObjectMapper();
+    assertEquals(
+        mapper.readTree(expected.toString()), mapper.readTree(response.getContentAsString()));
+  }
 
-        MockHttpServletResponse response = perform(conversionRequest("USD", "TRY", 10.0));
+  @Test
+  @DisplayName("getting a conversion fails when it is not found")
+  void gettingAConversionFailsWhenItIsNotFound() throws Exception {
+    var e = Errors.Conversion.conversionNotFound(1L);
 
-        assertEquals(201, response.getStatus());
-        ObjectMapper mapper = new ObjectMapper();
-        assertEquals(mapper.readTree(expected.toString()), mapper.readTree(response.getContentAsString()));
-    }
+    Mockito.when(conversionService.get(1L)).thenThrow(e);
 
-    @Test
-    @DisplayName("getting a conversion fails when it is not found")
-    void gettingAConversionFailsWhenItIsNotFound() throws Exception {
-        E e = Errors.Conversion.conversionNotFound.time(123456789L);
+    MockHttpServletResponse response = perform(getRequest(1L));
 
-        Mockito.when(conversionService.get(1L)).thenReturn(e.toEOr());
+    assertEquals(e.getStatusCode().value(), response.getStatus());
+    assertEquals(e.getMessage(), response.getContentAsString());
+  }
 
-        MockHttpServletResponse response = perform(getRequest(1L));
+  @Test
+  @DisplayName("getting a conversion returns conversion")
+  void gettingAConversionReturnsConversion() throws Exception {
+    ConversionResponse expected =
+        new ConversionResponse(
+            new Conversion(new CurrencyPair("USD", "TRY"), 7.0, 10.0, 70.0, 123456789L));
 
-        assertEquals(e.code().get(), response.getStatus());
-        assertEquals(e.toString(), response.getContentAsString());
-    }
+    Mockito.when(conversionService.get(2L)).thenReturn(expected);
 
-    @Test
-    @DisplayName("getting a conversion returns conversion")
-    void gettingAConversionReturnsConversion() throws Exception {
-        ConversionResponse expected = new ConversionResponse(new Conversion(new CurrencyPair("USD", "TRY"), 7.0, 10.0, 70.0, 123456789L));
+    MockHttpServletResponse response = perform(getRequest(2L));
 
-        Mockito.when(conversionService.get(2L)).thenReturn(EOr.from(expected));
+    assertEquals(200, response.getStatus());
+    ObjectMapper mapper = new ObjectMapper();
+    assertEquals(
+        mapper.readTree(expected.toString()), mapper.readTree(response.getContentAsString()));
+  }
 
-        MockHttpServletResponse response = perform(getRequest(2L));
+  @Test
+  @DisplayName("listing conversions fails when service fails")
+  void listingConversionsFailsWhenServiceFails() throws Exception {
+    var e = Errors.Conversion.cannotReadConversion(null, Map.of());
 
-        assertEquals(200, response.getStatus());
-        ObjectMapper mapper = new ObjectMapper();
-        assertEquals(mapper.readTree(expected.toString()), mapper.readTree(response.getContentAsString()));
-    }
+    Mockito.when(conversionService.list(null, null, 1, 5, true)).thenThrow(e);
 
-    @Test
-    @DisplayName("listing conversions fails when service fails")
-    void listingConversionsFailsWhenServiceFails() throws Exception {
-        E e = Errors.Conversion.cannotReadConversion.time(123456789L);
+    MockHttpServletResponse response = perform(listRequest(null, null, 1, 5, true));
 
-        Mockito.when(conversionService.list(null, null, 1, 5, true)).thenReturn(e.toEOr());
+    assertEquals(e.getStatusCode().value(), response.getStatus());
+    assertEquals(e.getMessage(), response.getContentAsString());
+  }
 
-        MockHttpServletResponse response = perform(listRequest(null, null, 1, 5, true));
+  @Test
+  @DisplayName("listing conversions returns conversions")
+  void listingConversionsReturnsConversions() throws Exception {
+    Conversion conversion1 =
+        new Conversion(new CurrencyPair("USD", "TRY"), 7.0, 10.0, 70.0, 123456789L);
+    Conversion conversion2 =
+        new Conversion(new CurrencyPair("EUR", "TRY"), 8.0, 10.0, 80.0, 123456789L);
+    conversion1.setId(1L);
+    conversion2.setId(2L);
 
-        assertEquals(e.code().get(), response.getStatus());
-        assertEquals(e.toString(), response.getContentAsString());
-    }
+    PagedResponse<ConversionResponse> expected =
+        new PagedResponse<>(
+            List.of(new ConversionResponse(conversion1), new ConversionResponse(conversion2)),
+            1,
+            1,
+            5,
+            2);
 
-    @Test
-    @DisplayName("listing conversions returns conversions")
-    void listingConversionsReturnsConversions() throws Exception {
-        Conversion conversion1 = new Conversion(new CurrencyPair("USD", "TRY"), 7.0, 10.0, 70.0, 123456789L);
-        Conversion conversion2 = new Conversion(new CurrencyPair("EUR", "TRY"), 8.0, 10.0, 80.0, 123456789L);
-        conversion1.setId(1L);
-        conversion2.setId(2L);
+    Mockito.when(conversionService.list(null, null, 1, 5, true)).thenReturn(expected);
 
-        PagedResponse<ConversionResponse> expected = new PagedResponse<>(List.of(new ConversionResponse(conversion1), new ConversionResponse(conversion2)), 1, 1, 5, 2);
+    MockHttpServletResponse response = perform(listRequest(null, null, 1, 5, true));
 
-        Mockito.when(conversionService.list(null, null, 1, 5, true)).thenReturn(EOr.from(expected));
+    assertEquals(200, response.getStatus());
+    ObjectMapper mapper = new ObjectMapper();
+    assertEquals(
+        mapper.readTree(expected.toString()), mapper.readTree(response.getContentAsString()));
+  }
 
-        MockHttpServletResponse response = perform(listRequest(null, null, 1, 5, true));
+  private MockHttpServletRequestBuilder conversionRequest(
+      String source, String target, double amount) {
+    return MockMvcRequestBuilders.post("/conversions")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content((new ConversionRequest(source, target, amount)).toString());
+  }
 
-        assertEquals(200, response.getStatus());
-        ObjectMapper mapper = new ObjectMapper();
-        assertEquals(mapper.readTree(expected.toString()), mapper.readTree(response.getContentAsString()));
-    }
+  private MockHttpServletRequestBuilder getRequest(long id) {
+    return MockMvcRequestBuilders.get("/conversions/" + id);
+  }
 
-    private MockHttpServletRequestBuilder conversionRequest(String source, String target, double amount) {
-        return MockMvcRequestBuilders
-                .post("/conversions")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content((new ConversionRequest(source, target, amount)).toString());
-    }
+  private MockHttpServletRequestBuilder listRequest(
+      LocalDate from, LocalDate to, int page, int size, boolean newestFirst) {
+    MockHttpServletRequestBuilder request =
+        MockMvcRequestBuilders.get("/conversions")
+            .param("page", String.valueOf(page))
+            .param("size", String.valueOf(size))
+            .param("newestFirst", String.valueOf(newestFirst));
 
-    private MockHttpServletRequestBuilder getRequest(long id) {
-        return MockMvcRequestBuilders.get("/conversions/" + id);
-    }
+    if (from != null) request.param("from", from.toString());
+    if (to != null) request.param("to", to.toString());
 
-    private MockHttpServletRequestBuilder listRequest(LocalDate from, LocalDate to, int page, int size, boolean newestFirst) {
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders
-                .get("/conversions")
-                .param("page", String.valueOf(page))
-                .param("size", String.valueOf(size))
-                .param("newestFirst", String.valueOf(newestFirst));
+    return request;
+  }
 
-        if (from != null) request.param("from", from.toString());
-        if (to != null)   request.param("to", to.toString());
-
-        return request;
-    }
-
-    private MockHttpServletResponse perform(MockHttpServletRequestBuilder request) throws Exception {
-        return mockMvc.perform(request).andReturn().getResponse();
-    }
+  private MockHttpServletResponse perform(MockHttpServletRequestBuilder request) throws Exception {
+    return mockMvc.perform(request).andReturn().getResponse();
+  }
 }

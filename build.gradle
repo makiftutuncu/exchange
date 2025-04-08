@@ -1,37 +1,32 @@
-import static org.gradle.api.tasks.testing.logging.TestLogEvent.*
-
 plugins {
-    id 'org.springframework.boot' version '2.3.3.RELEASE'
-    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
     id 'java'
+    id 'org.springframework.boot' version '3.4.4'
+    id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'dev.akif'
 version = '1.0.0'
-sourceCompatibility = '11'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(24)
+    }
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation 'dev.akif:e-java:2.0.0'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springdoc:springdoc-openapi-ui:1.2.32'
     runtimeOnly 'com.h2database:h2'
-    testImplementation('org.springframework.boot:spring-boot-starter-test') {
-        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
-    }
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation('com.pgs-soft:HttpClientMock:1.0.0')
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
 }
 
-test {
+tasks.named('test') {
     useJUnitPlatform()
-    testLogging {
-        events          = [PASSED, SKIPPED, FAILED]
-        showCauses      = true
-        showExceptions  = true
-        showStackTraces = true
-    }
 }
