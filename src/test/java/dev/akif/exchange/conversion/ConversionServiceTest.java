@@ -29,7 +29,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 @SpringBootTest(
     properties = {
       "spring.datasource.url=jdbc:h2:mem:exchangetest;DB_CLOSE_DELAY=-1",
-      "conversion.paging.defaultSize=2"
+      "conversion.paging.default-size=2"
     })
 public class ConversionServiceTest {
   @Autowired private ConversionRepository conversionRepository;
@@ -38,7 +38,7 @@ public class ConversionServiceTest {
 
   @MockitoBean private RateService rateService;
 
-  @Value("${conversion.paging.defaultSize}")
+  @Value("${conversion.paging.default-size}")
   private int defaultPageSize;
 
   @Autowired private ConversionService conversionService;

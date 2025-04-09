@@ -31,7 +31,7 @@ public class ConversionService {
   public ConversionService(
       ConversionRepository conversionRepository,
       RateService rateService,
-      @Value("${conversion.paging.defaultSize}") int defaultPageSize) {
+      @Value("${conversion.paging.default-size}") int defaultPageSize) {
     this.conversionRepository = conversionRepository;
     this.rateService = rateService;
     this.defaultPageSize = defaultPageSize;

@@ -67,19 +67,6 @@ public interface Errors {
       exception.initCause(cause);
       return exception;
     }
-
-    static HttpStatusCodeException parsingRatesFailed(Exception cause) {
-      HttpStatusCodeException exception =
-          new HttpServerErrorException(
-              "Cannot parse rates from fixer.io",
-              HttpStatus.SERVICE_UNAVAILABLE,
-              "service-unavailable",
-              null,
-              null,
-              null);
-      exception.initCause(cause);
-      return exception;
-    }
   }
 
   interface Rate {

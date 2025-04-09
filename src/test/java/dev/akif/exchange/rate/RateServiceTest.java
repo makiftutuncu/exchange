@@ -23,7 +23,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 @SpringBootTest(
     properties = {
       "spring.datasource.url=jdbc:h2:mem:exchangetest;DB_CLOSE_DELAY=-1",
-      "rate.freshnessThresholdInMillis=3000"
+      "rate.freshness-threshold-in-millis=3000"
     })
 public class RateServiceTest {
   @MockitoBean private FixerIO fixerIO;
@@ -32,7 +32,7 @@ public class RateServiceTest {
 
   @Mock private RateRepository mockRateRepository;
 
-  @Value("${rate.freshnessThresholdInMillis}")
+  @Value("${rate.freshness-threshold-in-millis}")
   private long rateFreshnessThresholdInMillis;
 
   @Autowired private RateService rateService;

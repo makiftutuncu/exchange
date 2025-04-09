@@ -1,56 +1,46 @@
 package dev.akif.exchange.fixerio;
 
+import static org.hamcrest.Matchers.endsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withBadRequest;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-import com.pgssoft.httpclient.HttpClientMock;
 import dev.akif.exchange.common.Errors;
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.HttpStatusCodeException;
 
+@RestClientTest(
+    components = {FixerIO.class, RestClientConfiguration.class},
+    properties = {"rate.base-currency=USD", "fixerio.access-key=test"})
 public class FixerIOTest {
-  private final String baseCurrency = "USD";
-  private final String host = "http://mock.fixer.io";
-  private final String accessKey = "testkey";
-
-  private FixerIO fixerIO;
-  private HttpClientMock httpClient;
+  @Autowired private FixerIO fixerIO;
+  @Autowired private MockRestServiceServer server;
 
   @BeforeEach
   void setUp() {
-    httpClient = new HttpClientMock();
-    fixerIO = new FixerIO(httpClient, baseCurrency, host, accessKey, 1000L);
+    server.reset();
   }
 
   @Test
   @DisplayName("getting latest rates fails when request fails")
   void gettingLatestRatesFailsWhenRequestFails() {
-    httpClient
-        .onGet(host + "/latest?access_key=" + accessKey)
-        .doThrowException(new IOException("test"));
+    server.expect(requestTo(endsWith("/latest?access_key=test"))).andRespond(withBadRequest());
 
     var expected = Errors.FixerIO.ratesRequestFailed(new IOException("test"));
 
     var actual = assertThrows(HttpStatusCodeException.class, () -> fixerIO.latestRates());
 
-    assertEquals(expected.getStatusCode(), actual.getStatusCode());
-    assertEquals(expected.getMessage(), actual.getMessage());
-  }
-
-  @Test
-  @DisplayName("getting latest rates fails when parsing fails")
-  void gettingLatestRatesFailsWhenParsingFails() {
-    httpClient.onGet(host + "/latest?access_key=" + accessKey).doReturn("{\"rates\":\"foo\"}");
-
-    var expected = Errors.FixerIO.parsingRatesFailed(new Exception("test"));
-
-    var actual = assertThrows(HttpStatusCodeException.class, () -> fixerIO.latestRates());
-
+    server.verify();
     assertEquals(expected.getStatusCode(), actual.getStatusCode());
     assertEquals(expected.getMessage(), actual.getMessage());
   }
@@ -58,13 +48,15 @@ public class FixerIOTest {
   @Test
   @DisplayName("getting latest rates returns rates")
   void gettingLatestRatesReturnsRates() {
-    httpClient
-        .onGet(host + "/latest?access_key=" + accessKey)
-        .doReturn("{\"rates\":{\"TRY\":7.0,\"EUR\":0.8}}");
+    server
+        .expect(requestTo(endsWith("/latest?access_key=test")))
+        .andRespond(
+            withSuccess("{\"rates\":{\"TRY\":7.0,\"EUR\":0.8}}", MediaType.APPLICATION_JSON));
 
-    FixerIOResponse expected =
-        new FixerIOResponse(baseCurrency, new LinkedHashMap<>(Map.of("TRY", 7.0, "EUR", 0.8)));
+    var expected = new FixerIOResponse("USD", Map.of("TRY", 7.0, "EUR", 0.8));
+    var actual = fixerIO.latestRates();
 
-    assertEquals(expected, fixerIO.latestRates());
+    server.verify();
+    assertEquals(expected, actual);
   }
 }

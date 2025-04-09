@@ -1,0 +1,34 @@
+conversion:
+  paging:
+    default-size: 5
+
+fixerio:
+  access-key: ${FIXER_IO_KEY:changeme}
+  host: https://data.fixer.io/api
+  timeout-in-millis: 5000
+
+logging:
+  level:
+    dev.akif.exchange: DEBUG
+
+rate:
+  base-currency: EUR
+  freshness-threshold-in-millis: 60000
+
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:file:./db/exchange;DB_CLOSE_DELAY=-1
+    username: exchangeuser
+    password: exhangepass
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+springdoc:
+  api-docs:
+    path: /docs
+  swagger-ui:
+    path: /swagger.html

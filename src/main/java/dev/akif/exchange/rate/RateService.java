@@ -24,8 +24,8 @@ public class RateService {
   public RateService(
       FixerIO fixerIO,
       RateRepository rateRepository,
-      @Value("${rate.freshnessThresholdInMillis}") long rateFreshnessThresholdInMillis,
-      @Value("${provider.fixerio.baseCurrency}") String baseCurrency) {
+      @Value("${rate.freshness-threshold-in-millis}") long rateFreshnessThresholdInMillis,
+      @Value("${rate.base-currency}") String baseCurrency) {
     this.fixerIO = fixerIO;
     this.rateRepository = rateRepository;
     this.rateFreshnessThresholdInMillis = rateFreshnessThresholdInMillis;

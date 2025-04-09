@@ -1,6 +1,6 @@
 # Exchange API
 
-Exchange API is a RESTful API providing exchange rates and conversions for many currencies.
+Exchange API is a REST API providing exchange rates and conversions for many currencies.
 
 ## Table of Contents
 
@@ -20,7 +20,7 @@ Exchange API is a [Spring Boot](https://spring.io/projects/spring-boot) project 
 * [Spring Data](https://spring.io/projects/spring-data) for data persistence
 * [H2](https://www.h2database.com) as database
 * [Spring Doc](https://springdoc.org) for API documentation
-* [JUnit 5](https://junit.org/junit5) and [HttpClientMock](https://github.com/PGSSoft/HttpClientMock) for testing
+* [JUnit 5](https://junit.org/junit5) for testing
 * [Gradle](https://gradle.org) as build tool
 
 ## Running
@@ -35,7 +35,7 @@ By default, Exchange API runs on `localhost:8080`.
 
 ## Configuration
 
-Exchange API can run out-of-the-box as long as credentials for rate provider is defined as `FIXER_IO_KEY` environment variable or in [`application.properties`](src/main/resources/application.properties) file.
+Exchange API can run out-of-the-box as long as credentials for rate provider is defined as `FIXER_IO_KEY` environment variable or in [`application.yml`](src/main/resources/application.yml) file.
 
 ## Documentation
 
