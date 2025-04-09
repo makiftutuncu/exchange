@@ -1,12 +1,10 @@
-package dev.akif.exchange.conversion.impl;
+package dev.akif.exchange.conversion;
 
 import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.common.Errors;
 import dev.akif.exchange.common.PagedResponse;
-import dev.akif.exchange.conversion.dto.ConversionResponse;
-import dev.akif.exchange.conversion.model.Conversion;
-import dev.akif.exchange.rate.dto.RateResponse;
-import dev.akif.exchange.rate.impl.RateService;
+import dev.akif.exchange.rate.RateResponse;
+import dev.akif.exchange.rate.RateService;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.Map;

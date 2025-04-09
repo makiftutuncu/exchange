@@ -1,4 +1,4 @@
-package dev.akif.exchange.rate.model;
+package dev.akif.exchange.rate;
 
 import dev.akif.exchange.common.CurrencyPair;
 import jakarta.persistence.Column;

@@ -1,4 +1,4 @@
-package dev.akif.exchange.rate.impl;
+package dev.akif.exchange.rate;
 
 import org.hamcrest.comparator.ComparatorMatcherBuilder;
 import org.hamcrest.core.Is;

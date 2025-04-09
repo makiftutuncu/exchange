@@ -1,11 +1,10 @@
-package dev.akif.exchange.provider.impl.fixerio;
+package dev.akif.exchange.fixerio;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.pgssoft.httpclient.HttpClientMock;
 import dev.akif.exchange.common.Errors;
-import dev.akif.exchange.provider.dto.FixerIOResponse;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -48,10 +47,7 @@ public class FixerIOTest {
   void gettingLatestRatesFailsWhenParsingFails() {
     httpClient.onGet(host + "/latest?access_key=" + accessKey).doReturn("{\"rates\":\"foo\"}");
 
-    var expected =
-        Errors.FixerIO.parsingRatesFailed(
-            new Exception(
-                "Cannot construct instance of `java.util.LinkedHashMap` (although at least one Creator exists): no String-argument constructor/factory method to deserialize from String value ('foo')\n at [Source: (String)\"{\"rates\":\"foo\"}\"; line: 1, column: 10] (through reference chain: dev.akif.exchange.provider.dto.RateProviderResponse[\"rates\"])"));
+    var expected = Errors.FixerIO.parsingRatesFailed(new Exception("test"));
 
     var actual = assertThrows(HttpStatusCodeException.class, () -> fixerIO.latestRates());
 

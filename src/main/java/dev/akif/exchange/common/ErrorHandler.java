@@ -1,4 +1,4 @@
-package dev.akif.exchange;
+package dev.akif.exchange.common;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

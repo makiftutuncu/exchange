@@ -1,11 +1,9 @@
-package dev.akif.exchange.rate.impl;
+package dev.akif.exchange.rate;
 
 import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.common.Errors;
-import dev.akif.exchange.provider.dto.FixerIOResponse;
-import dev.akif.exchange.provider.impl.fixerio.FixerIO;
-import dev.akif.exchange.rate.dto.RateResponse;
-import dev.akif.exchange.rate.model.Rate;
+import dev.akif.exchange.fixerio.FixerIO;
+import dev.akif.exchange.fixerio.FixerIOResponse;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

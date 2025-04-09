@@ -1,11 +1,10 @@
-package dev.akif.exchange.rate.impl;
+package dev.akif.exchange.rate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.common.Errors;
-import dev.akif.exchange.rate.dto.RateResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

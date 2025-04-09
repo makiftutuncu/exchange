@@ -1,7 +1,6 @@
-package dev.akif.exchange.rate.impl;
+package dev.akif.exchange.rate;
 
 import dev.akif.exchange.common.CurrencyPair;
-import dev.akif.exchange.rate.dto.RateResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;

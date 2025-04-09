@@ -1,4 +1,4 @@
-package dev.akif.exchange.provider.dto;
+package dev.akif.exchange.fixerio;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Map;

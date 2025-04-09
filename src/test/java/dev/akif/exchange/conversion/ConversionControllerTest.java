@@ -1,4 +1,4 @@
-package dev.akif.exchange.conversion.impl;
+package dev.akif.exchange.conversion;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -7,9 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.common.Errors;
 import dev.akif.exchange.common.PagedResponse;
-import dev.akif.exchange.conversion.dto.ConversionRequest;
-import dev.akif.exchange.conversion.dto.ConversionResponse;
-import dev.akif.exchange.conversion.model.Conversion;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;

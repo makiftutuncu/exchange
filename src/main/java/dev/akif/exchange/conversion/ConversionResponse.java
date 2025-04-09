@@ -1,6 +1,4 @@
-package dev.akif.exchange.conversion.dto;
-
-import dev.akif.exchange.conversion.model.Conversion;
+package dev.akif.exchange.conversion;
 
 public record ConversionResponse(
     Long id,

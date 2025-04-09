@@ -1,7 +1,6 @@
-package dev.akif.exchange.conversion.impl;
+package dev.akif.exchange.conversion;
 
 import dev.akif.exchange.common.CurrencyPair;
-import dev.akif.exchange.conversion.model.Conversion;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

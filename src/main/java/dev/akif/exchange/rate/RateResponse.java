@@ -1,4 +1,4 @@
-package dev.akif.exchange.rate.dto;
+package dev.akif.exchange.rate;
 
 import dev.akif.exchange.common.CurrencyPair;
 

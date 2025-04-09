@@ -1,4 +1,4 @@
-package dev.akif.exchange.conversion.impl;
+package dev.akif.exchange.conversion;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -7,10 +7,8 @@ import static org.mockito.ArgumentMatchers.any;
 import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.common.Errors;
 import dev.akif.exchange.common.PagedResponse;
-import dev.akif.exchange.conversion.dto.ConversionResponse;
-import dev.akif.exchange.conversion.model.Conversion;
-import dev.akif.exchange.rate.dto.RateResponse;
-import dev.akif.exchange.rate.impl.RateService;
+import dev.akif.exchange.rate.RateResponse;
+import dev.akif.exchange.rate.RateService;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;

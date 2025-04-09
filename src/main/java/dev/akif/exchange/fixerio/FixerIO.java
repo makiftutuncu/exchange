@@ -1,8 +1,7 @@
-package dev.akif.exchange.provider.impl.fixerio;
+package dev.akif.exchange.fixerio;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.akif.exchange.common.Errors;
-import dev.akif.exchange.provider.dto.FixerIOResponse;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
