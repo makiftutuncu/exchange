@@ -1,9 +1,7 @@
 package dev.akif.exchange.conversion.impl;
 
-import dev.akif.exchange.common.Controller;
 import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.common.PagedResponse;
-import dev.akif.exchange.conversion.ConversionService;
 import dev.akif.exchange.conversion.dto.ConversionRequest;
 import dev.akif.exchange.conversion.dto.ConversionResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,21 +16,14 @@ import java.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(
     name = "Conversion Controller",
     description = "This controller contains endpoints about conversions between currencies.")
 @RestController
 @RequestMapping("/conversions")
-public class ConversionController extends Controller {
+public class ConversionController {
   private final ConversionService conversionService;
 
   @Autowired
@@ -120,9 +111,10 @@ public class ConversionController extends Controller {
             })
       })
   @PostMapping
-  public ResponseEntity<ConversionResponse> convert(@RequestBody ConversionRequest request) {
-    CurrencyPair pair = CurrencyPair.of(request.source, request.target);
-    return respond(() -> conversionService.convert(pair, request.amount), HttpStatus.CREATED);
+  @ResponseStatus(HttpStatus.CREATED)
+  public ConversionResponse convert(@RequestBody ConversionRequest request) {
+    CurrencyPair pair = CurrencyPair.of(request.source(), request.target());
+    return conversionService.convert(pair, request.amount());
   }
 
   @Operation(
@@ -175,8 +167,8 @@ public class ConversionController extends Controller {
             })
       })
   @GetMapping("/{id}")
-  public ResponseEntity<ConversionResponse> get(@PathVariable("id") long id) {
-    return respond(() -> conversionService.get(id));
+  public ConversionResponse get(@PathVariable("id") long id) {
+    return conversionService.get(id);
   }
 
   @Operation(
@@ -232,7 +224,7 @@ public class ConversionController extends Controller {
             })
       })
   @GetMapping
-  public ResponseEntity<PagedResponse<ConversionResponse>> list(
+  public PagedResponse<ConversionResponse> list(
       @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
           LocalDate from,
       @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -241,6 +233,6 @@ public class ConversionController extends Controller {
       @RequestParam(value = "size", required = false, defaultValue = "5") int size,
       @RequestParam(value = "newestFirst", required = false, defaultValue = "true")
           boolean newestFirst) {
-    return respond(() -> conversionService.list(from, to, page, size, newestFirst));
+    return conversionService.list(from, to, page, size, newestFirst);
   }
 }

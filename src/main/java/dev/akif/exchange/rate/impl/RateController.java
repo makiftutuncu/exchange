@@ -1,8 +1,6 @@
 package dev.akif.exchange.rate.impl;
 
-import dev.akif.exchange.common.Controller;
 import dev.akif.exchange.common.CurrencyPair;
-import dev.akif.exchange.rate.RateService;
 import dev.akif.exchange.rate.dto.RateResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,7 +11,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
     description = "This controller contains endpoints about conversion rates between currencies.")
 @RestController
 @RequestMapping("/rates")
-public class RateController extends Controller {
+public class RateController {
   private final RateService rateService;
 
   @Autowired
@@ -98,8 +95,8 @@ public class RateController extends Controller {
             })
       })
   @GetMapping
-  public ResponseEntity<RateResponse> rates(
+  public RateResponse rates(
       @RequestParam("source") String source, @RequestParam("target") String target) {
-    return respond(() -> rateService.rate(CurrencyPair.of(source, target)));
+    return rateService.rate(CurrencyPair.of(source, target));
   }
 }

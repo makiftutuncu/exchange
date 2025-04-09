@@ -2,11 +2,11 @@ package dev.akif.exchange.conversion.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.common.Errors;
 import dev.akif.exchange.common.PagedResponse;
-import dev.akif.exchange.conversion.ConversionService;
 import dev.akif.exchange.conversion.dto.ConversionRequest;
 import dev.akif.exchange.conversion.dto.ConversionResponse;
 import dev.akif.exchange.conversion.model.Conversion;
@@ -32,6 +32,8 @@ public class ConversionControllerTest {
   @Autowired private MockMvc mockMvc;
 
   @MockitoBean private ConversionService conversionService;
+
+  @Autowired private ObjectMapper objectMapper;
 
   @Test
   @DisplayName("creating a new conversion fails with invalid input")
@@ -70,9 +72,7 @@ public class ConversionControllerTest {
     MockHttpServletResponse response = perform(conversionRequest("USD", "TRY", 10.0));
 
     assertEquals(201, response.getStatus());
-    ObjectMapper mapper = new ObjectMapper();
-    assertEquals(
-        mapper.readTree(expected.toString()), mapper.readTree(response.getContentAsString()));
+    assertEquals(objectMapper.writeValueAsString(expected), response.getContentAsString());
   }
 
   @Test
@@ -100,9 +100,7 @@ public class ConversionControllerTest {
     MockHttpServletResponse response = perform(getRequest(2L));
 
     assertEquals(200, response.getStatus());
-    ObjectMapper mapper = new ObjectMapper();
-    assertEquals(
-        mapper.readTree(expected.toString()), mapper.readTree(response.getContentAsString()));
+    assertEquals(objectMapper.writeValueAsString(expected), response.getContentAsString());
   }
 
   @Test
@@ -141,16 +139,14 @@ public class ConversionControllerTest {
     MockHttpServletResponse response = perform(listRequest(null, null, 1, 5, true));
 
     assertEquals(200, response.getStatus());
-    ObjectMapper mapper = new ObjectMapper();
-    assertEquals(
-        mapper.readTree(expected.toString()), mapper.readTree(response.getContentAsString()));
+    assertEquals(objectMapper.writeValueAsString(expected), response.getContentAsString());
   }
 
   private MockHttpServletRequestBuilder conversionRequest(
-      String source, String target, double amount) {
+      String source, String target, double amount) throws JsonProcessingException {
     return MockMvcRequestBuilders.post("/conversions")
         .contentType(MediaType.APPLICATION_JSON)
-        .content((new ConversionRequest(source, target, amount)).toString());
+        .content(objectMapper.writeValueAsString(new ConversionRequest(source, target, amount)));
   }
 
   private MockHttpServletRequestBuilder getRequest(long id) {

@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.common.PagedResponse;
-import dev.akif.exchange.conversion.ConversionRepository;
 import dev.akif.exchange.conversion.dto.ConversionRequest;
 import dev.akif.exchange.conversion.dto.ConversionResponse;
 import dev.akif.exchange.conversion.model.Conversion;
@@ -35,7 +34,7 @@ public class ConversionControllerEndToEndTest {
 
   @BeforeEach
   void setUp() {
-    ((ConversionCrudRepository) conversionRepository).deleteAll();
+    conversionRepository.deleteAll();
   }
 
   @Test
@@ -48,7 +47,7 @@ public class ConversionControllerEndToEndTest {
             .perform(
                 MockMvcRequestBuilders.post("/conversions")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(request.toString()))
+                    .content(objectMapper.writeValueAsString(request)))
             .andExpect(MockMvcResultMatchers.status().isCreated())
             .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
             .andReturn()
@@ -58,12 +57,13 @@ public class ConversionControllerEndToEndTest {
     ConversionResponse conversionResponse =
         objectMapper.readValue(response, ConversionResponse.class);
 
-    assertTrue(conversionResponse.id > 0L);
-    assertEquals("USD", conversionResponse.source);
-    assertEquals("TRY", conversionResponse.target);
+    assertTrue(conversionResponse.id() > 0L);
+    assertEquals("USD", conversionResponse.source());
+    assertEquals("TRY", conversionResponse.target());
     assertEquals(
-        conversionResponse.rate * conversionResponse.sourceAmount, conversionResponse.targetAmount);
-    assertTrue(conversionResponse.createdAt > 0L);
+        conversionResponse.rate() * conversionResponse.sourceAmount(),
+        conversionResponse.targetAmount());
+    assertTrue(conversionResponse.createdAt() > 0L);
   }
 
   @Test
@@ -111,7 +111,9 @@ public class ConversionControllerEndToEndTest {
         .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(
             MockMvcResultMatchers.content()
-                .json(new PagedResponse<ConversionResponse>(List.of(), 1, 0, 2, 0).toString()));
+                .json(
+                    objectMapper.writeValueAsString(
+                        new PagedResponse<ConversionResponse>(List.of(), 1, 0, 2, 0))));
 
     Conversion conversion1 =
         conversionRepository.save(
@@ -134,15 +136,15 @@ public class ConversionControllerEndToEndTest {
         .andExpect(
             MockMvcResultMatchers.content()
                 .json(
-                    new PagedResponse<>(
+                    objectMapper.writeValueAsString(
+                        new PagedResponse<>(
                             List.of(
                                 new ConversionResponse(conversion3),
                                 new ConversionResponse(conversion2)),
                             1,
                             2,
                             2,
-                            3)
-                        .toString()));
+                            3))));
 
     mockMvc
         .perform(
@@ -155,8 +157,9 @@ public class ConversionControllerEndToEndTest {
         .andExpect(
             MockMvcResultMatchers.content()
                 .json(
-                    new PagedResponse<>(List.of(new ConversionResponse(conversion1)), 2, 2, 2, 3)
-                        .toString()));
+                    objectMapper.writeValueAsString(
+                        new PagedResponse<>(
+                            List.of(new ConversionResponse(conversion1)), 2, 2, 2, 3))));
 
     mockMvc
         .perform(
@@ -170,8 +173,9 @@ public class ConversionControllerEndToEndTest {
         .andExpect(
             MockMvcResultMatchers.content()
                 .json(
-                    new PagedResponse<>(List.of(new ConversionResponse(conversion1)), 1, 1, 2, 1)
-                        .toString()));
+                    objectMapper.writeValueAsString(
+                        new PagedResponse<>(
+                            List.of(new ConversionResponse(conversion1)), 1, 1, 2, 1))));
 
     mockMvc
         .perform(
@@ -185,15 +189,15 @@ public class ConversionControllerEndToEndTest {
         .andExpect(
             MockMvcResultMatchers.content()
                 .json(
-                    new PagedResponse<>(
+                    objectMapper.writeValueAsString(
+                        new PagedResponse<>(
                             List.of(
                                 new ConversionResponse(conversion2),
                                 new ConversionResponse(conversion3)),
                             1,
                             1,
                             2,
-                            2)
-                        .toString()));
+                            2))));
 
     mockMvc
         .perform(
@@ -206,6 +210,8 @@ public class ConversionControllerEndToEndTest {
         .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(
             MockMvcResultMatchers.content()
-                .json(new PagedResponse<ConversionResponse>(List.of(), 2, 1, 2, 2).toString()));
+                .json(
+                    objectMapper.writeValueAsString(
+                        new PagedResponse<ConversionResponse>(List.of(), 2, 1, 2, 2))));
   }
 }

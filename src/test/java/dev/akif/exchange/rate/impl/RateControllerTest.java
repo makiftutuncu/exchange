@@ -5,9 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.common.Errors;
-import dev.akif.exchange.rate.RateService;
 import dev.akif.exchange.rate.dto.RateResponse;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -26,6 +24,8 @@ public class RateControllerTest {
   @Autowired private MockMvc mockMvc;
 
   @MockitoBean private RateService rateService;
+
+  @Autowired private ObjectMapper objectMapper;
 
   @Test
   @DisplayName("getting rates fails with invalid input")
@@ -65,9 +65,7 @@ public class RateControllerTest {
     MockHttpServletResponse response = perform(ratesRequest("USD", "TRY"));
 
     assertEquals(200, response.getStatus());
-    ObjectMapper mapper = new ObjectMapper();
-    assertEquals(
-        mapper.readTree(expected.toString()), mapper.readTree(response.getContentAsString()));
+    assertEquals(objectMapper.writeValueAsString(expected), response.getContentAsString());
   }
 
   private MockHttpServletRequestBuilder ratesRequest(String source, String target) {

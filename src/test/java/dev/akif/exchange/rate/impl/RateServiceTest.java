@@ -5,9 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.common.Errors;
-import dev.akif.exchange.provider.RateProvider;
-import dev.akif.exchange.provider.dto.RateProviderResponse;
-import dev.akif.exchange.rate.RateRepository;
+import dev.akif.exchange.provider.dto.FixerIOResponse;
+import dev.akif.exchange.provider.impl.fixerio.FixerIO;
 import dev.akif.exchange.rate.dto.RateResponse;
 import dev.akif.exchange.rate.model.Rate;
 import java.util.LinkedHashMap;
@@ -30,7 +29,7 @@ import org.springframework.web.client.HttpStatusCodeException;
       "rate.freshnessThresholdInMillis=3000"
     })
 public class RateServiceTest {
-  @MockitoBean private RateProvider rateProvider;
+  @MockitoBean private FixerIO fixerIO;
 
   @Autowired private RateRepository rateRepository;
 
@@ -39,16 +38,15 @@ public class RateServiceTest {
   @Value("${rate.freshnessThresholdInMillis}")
   private long rateFreshnessThresholdInMillis;
 
-  @Autowired private RateServiceImpl rateService;
+  @Autowired private RateService rateService;
 
-  private RateServiceImpl rateServiceWithMockRepo;
+  private RateService rateServiceWithMockRepo;
 
   @BeforeEach
   void setUp() {
-    Mockito.when(rateProvider.baseCurrency()).thenReturn("EUR");
     rateServiceWithMockRepo =
-        new RateServiceImpl(rateProvider, mockRateRepository, rateFreshnessThresholdInMillis);
-    ((RateCrudRepository) rateRepository).deleteAll();
+        new RateService(fixerIO, mockRateRepository, rateFreshnessThresholdInMillis, "EUR");
+    rateRepository.deleteAll();
   }
 
   @Test
@@ -61,7 +59,7 @@ public class RateServiceTest {
   @Test
   @DisplayName("getting rate fails when getting target rate fails")
   void gettingRateFailsWhenGettingTargetRateFails() {
-    RateServiceImpl spy = Mockito.spy(rateService);
+    RateService spy = Mockito.spy(rateService);
 
     var expected = Errors.Rate.cannotReadRate(null, "EUR", "TRY");
 
@@ -76,7 +74,7 @@ public class RateServiceTest {
   @Test
   @DisplayName("getting rate fails when getting source rate fails")
   void gettingRateFailsWhenGettingSourceRateFails() {
-    RateServiceImpl spy = Mockito.spy(rateService);
+    RateService spy = Mockito.spy(rateService);
 
     var expected = Errors.Rate.cannotReadRate(null, "EUR", "USD");
 
@@ -92,7 +90,7 @@ public class RateServiceTest {
   @Test
   @DisplayName("getting rate returns rate")
   void gettingRateReturnsRate() {
-    RateServiceImpl spy = Mockito.spy(rateService);
+    RateService spy = Mockito.spy(rateService);
 
     Mockito.doReturn(new RateResponse("EUR", "TRY", 8.0)).when(spy).rateOfBaseTo("TRY");
     Mockito.doReturn(new RateResponse("EUR", "USD", 1.2)).when(spy).rateOfBaseTo("USD");
@@ -110,7 +108,7 @@ public class RateServiceTest {
   @Test
   @DisplayName("getting rate of base fails when getting from DB fails")
   void gettingRateOfBaseFailsWhenGettingFromDBFails() {
-    RateServiceImpl spy = Mockito.spy(rateService);
+    RateService spy = Mockito.spy(rateService);
 
     var expected = Errors.Rate.cannotReadRate(null, "EUR", "USD");
 
@@ -124,7 +122,7 @@ public class RateServiceTest {
   @Test
   @DisplayName("getting rate of base returns rate when found on DB")
   void gettingRateOfBaseReturnsRateWhenFoundOnDB() {
-    RateServiceImpl spy = Mockito.spy(rateService);
+    RateService spy = Mockito.spy(rateService);
 
     Mockito.doReturn(Optional.of(new Rate("EUR", "USD", 1.2, 123456789L)))
         .when(spy)
@@ -138,7 +136,7 @@ public class RateServiceTest {
   @Test
   @DisplayName("getting rate of base fails when getting latest rates fails")
   void gettingRateOfBaseFailsWhenGettingLatestRatesFails() {
-    RateServiceImpl spy = Mockito.spy(rateService);
+    RateService spy = Mockito.spy(rateService);
 
     var expected = Errors.FixerIO.ratesRequestFailed(null);
 
@@ -153,10 +151,10 @@ public class RateServiceTest {
   @Test
   @DisplayName("getting rate of base gets latest rates, saves them and returns")
   void gettingRateOfBaseGetsLatestRatesSavesThemAndReturns() {
-    RateServiceImpl spy = Mockito.spy(rateService);
+    RateService spy = Mockito.spy(rateService);
 
     Mockito.doReturn(Optional.empty()).when(spy).getRateFromDB(new CurrencyPair("EUR", "USD"));
-    Mockito.doReturn(new RateProviderResponse("EUR", new LinkedHashMap<>(Map.of("USD", 1.2))))
+    Mockito.doReturn(new FixerIOResponse("EUR", new LinkedHashMap<>(Map.of("USD", 1.2))))
         .when(spy)
         .getAndSaveLatestRates();
 
@@ -204,7 +202,8 @@ public class RateServiceTest {
   void gettingRateFromDBReturnsRate() {
     CurrencyPair id = new CurrencyPair("EUR", "TRY");
 
-    Rate rate = rateRepository.save(new Rate("EUR", "TRY", 8.0, System.currentTimeMillis() + 5000L));
+    Rate rate =
+        rateRepository.save(new Rate("EUR", "TRY", 8.0, System.currentTimeMillis() + 5000L));
 
     assertEquals(Optional.of(rate), rateService.getRateFromDB(id));
   }
@@ -214,7 +213,7 @@ public class RateServiceTest {
   void gettingLatestRatesAndSavingFailsWhenGettingLatestRatesFails() {
     var expected = Errors.FixerIO.ratesRequestFailed(null);
 
-    Mockito.when(rateProvider.latestRates()).thenThrow(expected);
+    Mockito.when(fixerIO.latestRates()).thenThrow(expected);
 
     var e = assertThrows(HttpStatusCodeException.class, () -> rateService.getAndSaveLatestRates());
     assertEquals(expected.getStatusCode().value(), e.getStatusCode().value());
@@ -224,15 +223,18 @@ public class RateServiceTest {
   @Test
   @DisplayName("getting latest rates and saving returns latest rates")
   void gettingLatestRatesAndSavingReturnsLatestRates() {
-    RateProviderResponse response =
-        new RateProviderResponse("EUR", new LinkedHashMap<>(Map.of("TRY", 8.0)));
+    FixerIOResponse response =
+        new FixerIOResponse("EUR", new LinkedHashMap<>(Map.of("TRY", 8.0)));
 
-    Mockito.when(rateProvider.latestRates()).thenReturn(response);
+    Mockito.when(fixerIO.latestRates()).thenReturn(response);
 
     assertEquals(response, rateService.getAndSaveLatestRates());
 
     Optional<Rate> savedRate = rateRepository.findById(new CurrencyPair("EUR", "TRY"));
 
-    assertEquals(Optional.of(new Rate("EUR", "TRY", 8.0, savedRate.map(r -> r.getUpdatedAt()).orElseThrow())), savedRate);
+    assertEquals(
+        Optional.of(
+            new Rate("EUR", "TRY", 8.0, savedRate.map(r -> r.getUpdatedAt()).orElseThrow())),
+        savedRate);
   }
 }

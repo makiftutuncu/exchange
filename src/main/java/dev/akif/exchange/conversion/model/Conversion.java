@@ -38,8 +38,8 @@ public class Conversion {
 
   public Conversion(
       CurrencyPair pair, double rate, double sourceAmount, double targetAmount, long createdAt) {
-    this.source = pair.getSource();
-    this.target = pair.getTarget();
+    this.source = pair.source();
+    this.target = pair.target();
     this.rate = rate;
     this.sourceAmount = sourceAmount;
     this.targetAmount = targetAmount;

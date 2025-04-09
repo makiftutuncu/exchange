@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.pgssoft.httpclient.HttpClientMock;
 import dev.akif.exchange.common.Errors;
-import dev.akif.exchange.provider.dto.RateProviderResponse;
+import dev.akif.exchange.provider.dto.FixerIOResponse;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -18,7 +18,6 @@ public class FixerIOTest {
   private final String baseCurrency = "USD";
   private final String host = "http://mock.fixer.io";
   private final String accessKey = "testkey";
-  private final long timeoutInMillis = 1000L;
 
   private FixerIO fixerIO;
   private HttpClientMock httpClient;
@@ -26,13 +25,7 @@ public class FixerIOTest {
   @BeforeEach
   void setUp() {
     httpClient = new HttpClientMock();
-    fixerIO = new FixerIO(httpClient, baseCurrency, host, accessKey, timeoutInMillis);
-  }
-
-  @Test
-  @DisplayName("getting base currency returns USD")
-  void gettingBaseCurrencyReturnsUSD() {
-    assertEquals("USD", fixerIO.baseCurrency());
+    fixerIO = new FixerIO(httpClient, baseCurrency, host, accessKey, 1000L);
   }
 
   @Test
@@ -73,8 +66,8 @@ public class FixerIOTest {
         .onGet(host + "/latest?access_key=" + accessKey)
         .doReturn("{\"rates\":{\"TRY\":7.0,\"EUR\":0.8}}");
 
-    RateProviderResponse expected =
-        new RateProviderResponse(baseCurrency, new LinkedHashMap<>(Map.of("TRY", 7.0, "EUR", 0.8)));
+    FixerIOResponse expected =
+        new FixerIOResponse(baseCurrency, new LinkedHashMap<>(Map.of("TRY", 7.0, "EUR", 0.8)));
 
     assertEquals(expected, fixerIO.latestRates());
   }

@@ -3,14 +3,12 @@ package dev.akif.exchange.conversion.impl;
 import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.common.Errors;
 import dev.akif.exchange.common.PagedResponse;
-import dev.akif.exchange.common.PagingHelper;
-import dev.akif.exchange.conversion.ConversionRepository;
-import dev.akif.exchange.conversion.ConversionService;
 import dev.akif.exchange.conversion.dto.ConversionResponse;
 import dev.akif.exchange.conversion.model.Conversion;
-import dev.akif.exchange.rate.RateService;
 import dev.akif.exchange.rate.dto.RateResponse;
+import dev.akif.exchange.rate.impl.RateService;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -24,7 +22,7 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.stereotype.Service;
 
 @Service
-public class ConversionServiceImpl implements ConversionService {
+public class ConversionService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private final ConversionRepository conversionRepository;
@@ -32,7 +30,7 @@ public class ConversionServiceImpl implements ConversionService {
   private final int defaultPageSize;
 
   @Autowired
-  public ConversionServiceImpl(
+  public ConversionService(
       ConversionRepository conversionRepository,
       RateService rateService,
       @Value("${conversion.paging.defaultSize}") int defaultPageSize) {
@@ -41,34 +39,33 @@ public class ConversionServiceImpl implements ConversionService {
     this.defaultPageSize = defaultPageSize;
   }
 
-  @Override
   public ConversionResponse convert(CurrencyPair pair, double amount) {
-    logger.info("Converting {} {} to {}", amount, pair.getSource(), pair.getTarget());
+    logger.info("Converting {} {} to {}", amount, pair.source(), pair.target());
 
     RateResponse rate = rateService.rate(pair);
-    double targetAmount = amount * rate.rate;
+    double targetAmount = amount * rate.rate();
     long now = System.currentTimeMillis();
 
-    Conversion conversion = new Conversion(pair, rate.rate, amount, targetAmount, now);
+    Conversion conversion = new Conversion(pair, rate.rate(), amount, targetAmount, now);
 
     logger.debug("Saving conversion {}", conversion);
 
     try {
       conversionRepository.save(conversion);
       ConversionResponse r = new ConversionResponse(conversion);
-      logger.info("Converted, {} {} is {} {}", r.sourceAmount, r.source, r.targetAmount, r.target);
+      logger.info(
+          "Converted, {} {} is {} {}", r.sourceAmount(), r.source(), r.targetAmount(), r.target());
       return r;
     } catch (Exception e) {
       throw Errors.Conversion.cannotSaveConversion(
           e,
           Map.of(
-              "source", pair.getSource(),
-              "target", pair.getTarget(),
+              "source", pair.source(),
+              "target", pair.target(),
               "amount", String.valueOf(amount)));
     }
   }
 
-  @Override
   public ConversionResponse get(long id) {
     logger.info("Getting conversion {}", id);
 
@@ -78,20 +75,24 @@ public class ConversionServiceImpl implements ConversionService {
     } catch (Exception e) {
       throw Errors.Conversion.cannotReadConversion(e, Map.of("id", String.valueOf(id)));
     }
-    Conversion conversion = maybeConversion.orElseThrow(() -> Errors.Conversion.conversionNotFound(id));
+    Conversion conversion =
+        maybeConversion.orElseThrow(() -> Errors.Conversion.conversionNotFound(id));
     return new ConversionResponse(conversion);
   }
 
-  @Override
   public PagedResponse<ConversionResponse> list(
       LocalDate fromDate, LocalDate toDate, int page, int size, boolean newestFirst) {
-    long from = PagingHelper.from(fromDate);
-    long to = PagingHelper.to(toDate);
+    long from =
+        fromDate == null ? 0L : fromDate.atStartOfDay(ZoneOffset.UTC).toEpochSecond() * 1000;
+    long to =
+        toDate == null
+            ? Long.MAX_VALUE
+            : toDate.plusDays(1).atStartOfDay(ZoneOffset.UTC).toEpochSecond() * 1000;
 
     PageRequest pageRequest =
         PageRequest.of(
-            PagingHelper.page(page),
-            PagingHelper.size(size, defaultPageSize),
+            page <= 0 ? 0 : page - 1,
+            size <= 0 || size > 50 ? defaultPageSize : size,
             Sort.by(newestFirst ? Order.desc("createdAt") : Order.asc("createdAt")));
 
     try {

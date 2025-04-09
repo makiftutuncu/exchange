@@ -7,11 +7,10 @@ import static org.mockito.ArgumentMatchers.any;
 import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.common.Errors;
 import dev.akif.exchange.common.PagedResponse;
-import dev.akif.exchange.conversion.ConversionRepository;
 import dev.akif.exchange.conversion.dto.ConversionResponse;
 import dev.akif.exchange.conversion.model.Conversion;
-import dev.akif.exchange.rate.RateService;
 import dev.akif.exchange.rate.dto.RateResponse;
+import dev.akif.exchange.rate.impl.RateService;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -44,15 +43,15 @@ public class ConversionServiceTest {
   @Value("${conversion.paging.defaultSize}")
   private int defaultPageSize;
 
-  @Autowired private ConversionServiceImpl conversionService;
+  @Autowired private ConversionService conversionService;
 
-  private ConversionServiceImpl conversionServiceWithMockRepo;
+  private ConversionService conversionServiceWithMockRepo;
 
   @BeforeEach
   void setUp() {
     conversionServiceWithMockRepo =
-        new ConversionServiceImpl(mockConversionRepository, rateService, defaultPageSize);
-    ((ConversionCrudRepository) conversionRepository).deleteAll();
+        new ConversionService(mockConversionRepository, rateService, defaultPageSize);
+    conversionRepository.deleteAll();
   }
 
   @Test
@@ -97,8 +96,8 @@ public class ConversionServiceTest {
 
     ConversionResponse actual = conversionService.convert(pair, 10.0);
 
-    Conversion conversion = new Conversion(pair, 7.0, 10.0, 70.0, actual.createdAt);
-    ConversionResponse expected = new ConversionResponse(actual.id, conversion);
+    Conversion conversion = new Conversion(pair, 7.0, 10.0, 70.0, actual.createdAt());
+    ConversionResponse expected = new ConversionResponse(actual.id(), conversion);
 
     assertEquals(expected, actual);
   }
