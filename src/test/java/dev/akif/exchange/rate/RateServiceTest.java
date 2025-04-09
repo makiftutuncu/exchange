@@ -7,7 +7,6 @@ import dev.akif.exchange.common.CurrencyPair;
 import dev.akif.exchange.common.Errors;
 import dev.akif.exchange.fixerio.FixerIO;
 import dev.akif.exchange.fixerio.FixerIOResponse;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -152,7 +151,7 @@ public class RateServiceTest {
     RateService spy = Mockito.spy(rateService);
 
     Mockito.doReturn(Optional.empty()).when(spy).getRateFromDB(new CurrencyPair("EUR", "USD"));
-    Mockito.doReturn(new FixerIOResponse("EUR", new LinkedHashMap<>(Map.of("USD", 1.2))))
+    Mockito.doReturn(new FixerIOResponse("EUR", Map.of("USD", 1.2)))
         .when(spy)
         .getAndSaveLatestRates();
 
@@ -221,8 +220,7 @@ public class RateServiceTest {
   @Test
   @DisplayName("getting latest rates and saving returns latest rates")
   void gettingLatestRatesAndSavingReturnsLatestRates() {
-    FixerIOResponse response =
-        new FixerIOResponse("EUR", new LinkedHashMap<>(Map.of("TRY", 8.0)));
+    FixerIOResponse response = new FixerIOResponse("EUR", Map.of("TRY", 8.0));
 
     Mockito.when(fixerIO.latestRates()).thenReturn(response);
 

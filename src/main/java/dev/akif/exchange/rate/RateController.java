@@ -61,41 +61,28 @@ public class RateController {
             responseCode = "400",
             content = {
               @Content(
-                  mediaType = "application/json",
-                  examples = {
-                    @ExampleObject(
-                        value =
-                            "{\"code\":400,\"name\":\"invalid-input\",\"message\":\"Currency is invalid\"}")
-                  })
+                  mediaType = "text/plain",
+                  examples = {@ExampleObject(value = "Currency is invalid")})
             }),
         @ApiResponse(
             description = "Cannot read rate",
             responseCode = "500",
             content = {
               @Content(
-                  mediaType = "application/json",
-                  examples = {
-                    @ExampleObject(
-                        value =
-                            "{\"code\":500,\"name\":\"database\",\"message\":\"Cannot read rate\"}")
-                  })
+                  mediaType = "text/plain",
+                  examples = {@ExampleObject(value = "Cannot read rate")})
             }),
         @ApiResponse(
             description = "Cannot get latest rates",
             responseCode = "503",
             content = {
               @Content(
-                  mediaType = "application/json",
-                  examples = {
-                    @ExampleObject(
-                        value =
-                            "{\"code\":503,\"name\":\"service-unavailable\",\"message\":\"Cannot get rates from fixer.io\"}")
-                  })
+                  mediaType = "text/plain",
+                  examples = {@ExampleObject(value = "Cannot get rates from fixer.io")})
             })
       })
   @GetMapping
-  public RateResponse rates(
-      @RequestParam("source") String source, @RequestParam("target") String target) {
+  public RateResponse rates(@RequestParam String source, @RequestParam String target) {
     return rateService.rate(CurrencyPair.of(source, target));
   }
 }

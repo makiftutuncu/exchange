@@ -64,48 +64,32 @@ public class ConversionController {
             responseCode = "400",
             content = {
               @Content(
-                  mediaType = "application/json",
-                  examples = {
-                    @ExampleObject(
-                        value =
-                            "{\"code\":400,\"name\":\"invalid-input\",\"message\":\"Currency is invalid\"}")
-                  })
+                  mediaType = "text/plain",
+                  examples = {@ExampleObject(value = "Currency is invalid")})
             }),
         @ApiResponse(
             description = "Cannot read rate",
             responseCode = "500",
             content = {
               @Content(
-                  mediaType = "application/json",
-                  examples = {
-                    @ExampleObject(
-                        value =
-                            "{\"code\":500,\"name\":\"database\",\"message\":\"Cannot read rate\"}")
-                  })
+                  mediaType = "text/plain",
+                  examples = {@ExampleObject(value = "Cannot read rate")})
             }),
         @ApiResponse(
             description = "Cannot save conversion",
             responseCode = "500",
             content = {
               @Content(
-                  mediaType = "application/json",
-                  examples = {
-                    @ExampleObject(
-                        value =
-                            "{\"code\":500,\"name\":\"database\",\"message\":\"Cannot save conversion\"}")
-                  })
+                  mediaType = "text/plain",
+                  examples = {@ExampleObject(value = "Cannot save conversion")})
             }),
         @ApiResponse(
             description = "Cannot get latest rates",
             responseCode = "503",
             content = {
               @Content(
-                  mediaType = "application/json",
-                  examples = {
-                    @ExampleObject(
-                        value =
-                            "{\"code\":503,\"name\":\"service-unavailable\",\"message\":\"Cannot get rates from fixer.io\"}")
-                  })
+                  mediaType = "text/plain",
+                  examples = {@ExampleObject(value = "Cannot get rates from fixer.io")})
             })
       })
   @PostMapping
@@ -144,28 +128,20 @@ public class ConversionController {
             responseCode = "404",
             content = {
               @Content(
-                  mediaType = "application/json",
-                  examples = {
-                    @ExampleObject(
-                        value =
-                            "{\"code\":404,\"name\":\"not-found\",\"message\":\"Conversion not found\"}")
-                  })
+                  mediaType = "text/plain",
+                  examples = {@ExampleObject(value = "Conversion not found")})
             }),
         @ApiResponse(
             description = "Cannot read conversion",
             responseCode = "500",
             content = {
               @Content(
-                  mediaType = "application/json",
-                  examples = {
-                    @ExampleObject(
-                        value =
-                            "{\"code\":500,\"name\":\"database\",\"message\":\"Cannot read conversion\"}")
-                  })
+                  mediaType = "text/plain",
+                  examples = {@ExampleObject(value = "Cannot read conversion")})
             })
       })
   @GetMapping("/{id}")
-  public ConversionResponse get(@PathVariable("id") long id) {
+  public ConversionResponse get(@PathVariable long id) {
     return conversionService.get(id);
   }
 
@@ -213,24 +189,17 @@ public class ConversionController {
             responseCode = "500",
             content = {
               @Content(
-                  mediaType = "application/json",
-                  examples = {
-                    @ExampleObject(
-                        value =
-                            "{\"code\":500,\"name\":\"database\",\"message\":\"Cannot read conversion\"}")
-                  })
+                  mediaType = "text/plain",
+                  examples = {@ExampleObject(value = "Cannot read conversion")})
             })
       })
   @GetMapping
   public PagedResponse<ConversionResponse> list(
-      @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-          LocalDate from,
-      @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-          LocalDate to,
-      @RequestParam(value = "page", required = false, defaultValue = "1") int page,
-      @RequestParam(value = "size", required = false, defaultValue = "5") int size,
-      @RequestParam(value = "newestFirst", required = false, defaultValue = "true")
-          boolean newestFirst) {
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+      @RequestParam(required = false, defaultValue = "1") int page,
+      @RequestParam(required = false, defaultValue = "5") int size,
+      @RequestParam(required = false, defaultValue = "true") boolean newestFirst) {
     return conversionService.list(from, to, page, size, newestFirst);
   }
 }
