@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import { FooterCopyright } from "flowbite-react";
-import Header from "./Header";
+import Header from "./common/Header";
 
 const roboto = Roboto({ subsets: ["latin"] });
 
